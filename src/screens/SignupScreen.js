@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import { auth } from '../utils/Firebase';
+import { db, auth } from '../utils/Firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function SignupScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [name, setName] = useState("");
 
   const loginHandler = () => {
     navigation.replace("Login");
@@ -25,6 +27,16 @@ export default function SignupScreen({ navigation }) {
         email,
         password
       );
+
+      // Initialize user document in Firestore
+      const userDocRef = doc(db, 'users', userCred.user.uid);
+      await setDoc(userDocRef, {
+        friends: [],
+        email: userCred.user.email,
+        name: name,
+        // ... any other initial data for user
+      });
+
       console.log(userCred);
       navigation.replace("Login"); // Take user to the Login after successful registration
     } catch (err) {
@@ -39,6 +51,13 @@ export default function SignupScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.label}>Name</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Name"
+        value={name}
+        onChangeText={(newText) => setName(newText)}
+      />
       <Text style={styles.label}>Email</Text>
       <TextInput
         style={styles.input}

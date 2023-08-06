@@ -1,15 +1,40 @@
+
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import ChatsScreen from '../screens/ChatsScreen';
 import FriendsScreen from '../screens/FriendsScreen';
 import DiscoverScreen from '../screens/DiscoverScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import SearchScreen from '../screens/SearchScreen';
 import { TouchableOpacity, View } from 'react-native';
 import { Entypo } from '@expo/vector-icons';
 import Styles from '../styles/Styles';
 
 const Tab = createBottomTabNavigator();
+const FriendStack = createStackNavigator();
+
+const FriendStackNavigator = () => {
+  return (
+    <FriendStack.Navigator>
+      <FriendStack.Screen 
+        name="Friends List" 
+        component={FriendsScreen}
+        options={({ navigation }) => ({
+          headerRight: () => (
+            <TouchableOpacity onPress={() => navigation.navigate('SearchFriend')}>
+              <View style={{ marginRight: 15 }}>
+                <Entypo name="plus" size={24} color="black" />
+              </View>
+            </TouchableOpacity>
+          ),
+        })}
+      />
+      <FriendStack.Screen name="SearchFriend" component={SearchScreen} />
+    </FriendStack.Navigator>
+  );
+};
 
 const TabNavigator = () => {
   return (
@@ -33,17 +58,18 @@ const TabNavigator = () => {
         tabBarInactiveTintColor: 'gray',
         tabBarLabelStyle: Styles.tabBarLabel,
         headerTitleAlign: 'center',
-        headerRight: () => (
-          <TouchableOpacity onPress={() => navigation.navigate('Add Entry')}>
-            <View style={{ marginRight: 15 }}>
-              <Entypo name="plus" size={24} color="black" />
-            </View>
-          </TouchableOpacity>
-        ),
+        headerShown: route.name === 'Friends' ? false : true,
+        // headerRight: () => (
+        //   <TouchableOpacity onPress={() => navigation.navigate('Add Entry')}>
+        //     <View style={{ marginRight: 15 }}>
+        //       <Entypo name="plus" size={24} color="black" />
+        //     </View>
+        //   </TouchableOpacity>
+        // ),
       })}
     >
       <Tab.Screen name="Chats" component={ChatsScreen} />
-      <Tab.Screen name="Friends" component={FriendsScreen} />
+      <Tab.Screen name="Friends" component={FriendStackNavigator} />
       <Tab.Screen name="Discover" component={DiscoverScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
