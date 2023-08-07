@@ -68,11 +68,11 @@ const FriendsScreen = ({ navigation }) => {
 
   return (
     <View>
-      <TextInput
+      {/* <TextInput
         placeholder="Search for friends..."
         value={searchText}
         onChangeText={setSearchText}
-      />
+      /> */}
       <FlatList
         data={filteredFriends}
         renderItem={renderItem}

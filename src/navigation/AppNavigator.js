@@ -4,6 +4,7 @@ import TabNavigator from './TabNavigator';
 import LoginScreen from '../screens/LoginScreen';
 import SignupScreen from '../screens/SignupScreen';
 import ChatsScreen from '../screens/ChatsScreen';
+import Chatcreen from '../screens/ChatScreen';
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../utils/Firebase";
 
