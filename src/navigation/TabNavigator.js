@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -8,6 +7,7 @@ import FriendsScreen from '../screens/FriendsScreen';
 import DiscoverScreen from '../screens/DiscoverScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import SearchScreen from '../screens/SearchScreen';
+import ChatScreen from '../screens/ChatScreen';
 import { TouchableOpacity, View } from 'react-native';
 import { Entypo } from '@expo/vector-icons';
 import Styles from '../styles/Styles';
@@ -23,7 +23,7 @@ const FriendStackNavigator = () => {
         component={FriendsScreen}
         options={({ navigation }) => ({
           headerRight: () => (
-            <TouchableOpacity onPress={() => navigation.navigate('SearchFriend')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Search Friend')}>
               <View style={{ marginRight: 15 }}>
                 <Entypo name="plus" size={24} color="black" />
               </View>
@@ -31,7 +31,8 @@ const FriendStackNavigator = () => {
           ),
         })}
       />
-      <FriendStack.Screen name="SearchFriend" component={SearchScreen} />
+      <FriendStack.Screen name="Search Friend" component={SearchScreen} />
+      <FriendStack.Screen name="Chat" component={ChatScreen} />
     </FriendStack.Navigator>
   );
 };

@@ -7,8 +7,24 @@ const SearchScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
 
+  const getCurrentUserName = async () => {
+    const userEmail = auth.currentUser.email;
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where("email", "==", userEmail));
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      const currentUserDoc = querySnapshot.docs[0];
+      return currentUserDoc.data().name;
+    }
+
+    // Handle case where user is not found in Firestore (this shouldn't happen normally)
+    throw new Error('Current user not found in Firestore.');
+  };
+
   const addFriend = async (userDoc) => {
     try {
+      // add friend to current user's friend list
       const friendToAdd = {
         id: userDoc.id,
         email: userDoc.data().email,
@@ -21,10 +37,12 @@ const SearchScreen = ({ navigation }) => {
         friends: arrayUnion(friendToAdd)
       });
 
+      // add current user to friend's friend list
+      const currentUserName = await getCurrentUserName();
       const currentUserInfo = {
         id: auth.currentUser.uid,
         email: auth.currentUser.email,
-        // assuming you have the current user's name, if not you may need to fetch it
+        name: currentUserName
       };
 
       const userDocRef = doc(db, 'users', userDoc.id);
@@ -33,6 +51,8 @@ const SearchScreen = ({ navigation }) => {
       });
 
       setMessage(`Successfully added ${userDoc.data().email} as a friend.`);
+      // Automatically go back to the previous screen
+      navigation.goBack();
     } catch (error) {
       console.error("Error updating friend list:", error);
       setMessage("Failed to add friend. Please try again.");
