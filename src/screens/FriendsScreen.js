@@ -10,7 +10,7 @@ const FriendsScreen = ({ navigation }) => {
   useEffect(() => {
     const currentUserDoc = doc(db, 'users', auth.currentUser.uid);
 
-    // monitor the current user's friends list
+    // Monitor the current user's friends list
     const unsubscribe = onSnapshot(currentUserDoc, (docSnapshot) => {
       if (docSnapshot.exists()) {
         const userFriends = docSnapshot.data().friends || [];
@@ -23,8 +23,8 @@ const FriendsScreen = ({ navigation }) => {
 
   const filteredFriends = friends.filter(friend => friend.name.toLowerCase().includes(searchText.toLowerCase()));
 
-    const startChat = async (friend) => {
-    const currentUserId = auth.currentUser.uid; // replace with your way of fetching current user id
+  const startChat = async (friend) => {
+    const currentUserId = auth.currentUser.uid;
 
     // Check if chat already exists between the two users
     const chatsRef = collection(db, 'chats');
@@ -43,12 +43,12 @@ const FriendsScreen = ({ navigation }) => {
       // Navigate to the existing chat
       navigation.navigate('Chat', { chatId: existingChat.id });
     } else {
-      // Create a new chat in the database
+      // Create a new chat in the database with the pinned field
       const newChatData = {
         members: [currentUserId, friend.id],
         lastMessage: '',
         lastMessageTime: new Date().toISOString(),
-        // ... any other chat initialization data
+        pinned: false,  // default value for pinned
       };
       const newChatDocRef = await addDoc(chatsRef, newChatData);
       
