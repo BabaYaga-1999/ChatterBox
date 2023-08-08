@@ -1,21 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, FlatList } from 'react-native';
+import { collection, addDoc, onSnapshot } from 'firebase/firestore';
+import { db, auth } from '../utils/Firebase';
 
 const ChatScreen = ({ route, navigation }) => {
-  // TODO: Fetch chat messages based on chatId from route.params.chatId
-  // Let's assume chatMessages is the fetched data
-  const chatMessages = []; // placeholder
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+
+  const { chatId } = route.params;
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'chats', chatId, 'messages'), (snapshot) => {
+      const fetchedMessages = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+      setMessages(fetchedMessages.reverse());
+    });
+
+    return () => unsubscribe();
+  }, [chatId]);
+
+  const sendMessage = async () => {
+    if (input.trim()) {
+      const newMessage = {
+        text: input,
+        createdAt: new Date().toISOString(),
+        userId: auth.currentUser.uid,
+      };
+
+      await addDoc(collection(db, 'chats', chatId, 'messages'), newMessage);
+      setInput('');
+    }
+  };
 
   return (
     <View style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
-        {/* Display chat messages here */}
         <FlatList
-          data={chatMessages}
+          data={messages}
           renderItem={({ item }) => (
             <View style={{ flexDirection: 'row' }}>
-              {/* Depending on whether the message is from the current user or friend, you can align the message to left or right */}
-              <Text>{item.message}</Text>
+              <Text>{item.text}</Text>
             </View>
           )}
           keyExtractor={(item) => item.id}
@@ -24,11 +47,12 @@ const ChatScreen = ({ route, navigation }) => {
 
       <View style={{ flexDirection: 'row', alignItems: 'center', margin: 10 }}>
         <TextInput
+          value={input}
+          onChangeText={setInput}
           style={{ flex: 1, borderColor: 'gray', borderWidth: 1, borderRadius: 5 }}
           placeholder="Type a message..."
         />
-        {/* Add other functionalities like send images, location, etc. next to this input */}
-        <Button title="Send" onPress={() => { /* Handle sending the message */ }} />
+        <Button title="Send" onPress={sendMessage} />
       </View>
     </View>
   );
