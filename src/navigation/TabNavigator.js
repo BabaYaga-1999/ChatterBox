@@ -11,9 +11,11 @@ import ChatScreen from '../screens/ChatScreen';
 import { TouchableOpacity, View } from 'react-native';
 import { Entypo } from '@expo/vector-icons';
 import Styles from '../styles/Styles';
+import CreatePost from '../screens/CreatePost';
 
 const Tab = createBottomTabNavigator();
 const FriendStack = createStackNavigator();
+const DiscoverStack = createStackNavigator();
 
 const FriendStackNavigator = () => {
   return (
@@ -37,6 +39,27 @@ const FriendStackNavigator = () => {
   );
 };
 
+const DiscoverStackNavigator = () => {
+  return (
+    <DiscoverStack.Navigator>
+      <DiscoverStack.Screen 
+        name="Discover Screen" 
+        component={DiscoverScreen}
+        options={({ navigation }) => ({
+          headerRight: () => (
+            <TouchableOpacity onPress={() => navigation.navigate('Create Post')}>
+              <View style={{ marginRight: 15 }}>
+                <Entypo name="plus" size={24} color="black" />
+              </View>
+            </TouchableOpacity>
+          ),
+        })}
+      />
+    <DiscoverStack.Screen name="Create Post" component={CreatePost} />
+  </DiscoverStack.Navigator>
+  )
+}
+
 const TabNavigator = () => {
   return (
     <Tab.Navigator
@@ -59,7 +82,7 @@ const TabNavigator = () => {
         tabBarInactiveTintColor: 'gray',
         tabBarLabelStyle: Styles.tabBarLabel,
         headerTitleAlign: 'center',
-        headerShown: route.name === 'Friends' ? false : true,
+        headerShown: route.name === 'Friends' || route.name==="Discover" ? false : true,
         // headerRight: () => (
         //   <TouchableOpacity onPress={() => navigation.navigate('Add Entry')}>
         //     <View style={{ marginRight: 15 }}>
@@ -71,7 +94,7 @@ const TabNavigator = () => {
     >
       <Tab.Screen name="Chats" component={ChatsScreen} />
       <Tab.Screen name="Friends" component={FriendStackNavigator} />
-      <Tab.Screen name="Discover" component={DiscoverScreen} />
+      <Tab.Screen name="Discover" component={DiscoverStackNavigator} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
