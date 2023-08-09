@@ -1,5 +1,5 @@
 import { collection, addDoc, doc, deleteDoc, setDoc } from "firebase/firestore";
-import { db } from "./firebase-setup";
+import { db } from "./Firebase";
 
 export async function deleteFromDB(id) {
   try {
