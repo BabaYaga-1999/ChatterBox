@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, FlatList } from 'react-native';
-import { collection, addDoc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, updateDoc, doc } from 'firebase/firestore';
 import { db, auth } from '../utils/Firebase';
 
 const ChatScreen = ({ route, navigation }) => {
@@ -27,6 +27,13 @@ const ChatScreen = ({ route, navigation }) => {
       };
 
       await addDoc(collection(db, 'chats', chatId, 'messages'), newMessage);
+
+      // Update the chat's lastMessage and lastMessageTime fields
+      await updateDoc(doc(db, 'chats', chatId), {
+        lastMessage: input,
+        lastMessageTime: newMessage.createdAt,
+      });
+
       setInput('');
     }
   };
