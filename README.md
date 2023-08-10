@@ -2,18 +2,67 @@ Team members:
 Yucheng Wang  
 Xiangyuan Ding
 
+Data Model
+1. Collections:
 
+There are three primary collections:
+
+- chats
+- posts
+- users
+
+1. Detailed Description:
+
+  i. chats:
+
+- Purpose: Stores all chat sessions.
+- Structure:
+  - Each chat session represents a chat room between two users.
+  - Contains a sub-collection called "messages" and a document.
+- Sub-collection: messages:
+  - Purpose: Stores all messages exchanged in the chat room.
+  - Fields:
+    - createdAt: Timestamp indicating when the message was created.
+    - text: The content of the message.
+    - userId: The ID of the user who sent the message.
+- Document:
+  - Purpose: Provides meta-information about the chat room.
+  - Fields:
+    - deleteBy: Indicates which user (if any) has deleted this chat on their device.
+    - lastMessage: The last message exchanged in this chat room.
+    - lastMessageTime: Timestamp indicating when the last message was sent.
+    - members: A list containing the IDs of the two users in the chat.
+    - pinned: A boolean indicating if the chat has been pinned or not.
+
+ ii. posts:
+
+- Purpose: Stores all the posts created by users.
+- Fields:
+  - title: The title of the post.
+  - gps: The geographical location where the post was created.
+  - description: The content or description of the post.
+
+ iii. users:
+
+- Purpose: Stores information related to all registered users.
+- Fields:
+  - email: The email ID of the user.
+  - friends: A list containing the IDs of the user's friends.
+  - name: The name of the user.
+  - Future enhancements may include fields like avatar, preferences, etc.
+
+ 3. Relationships:
+
+1. Each user can be a part of multiple chat sessions in the chats collection.
+2. Each user can have multiple posts in the posts collection.
+3. The userId in the chats collection's messages links back to a document in the users collection, indicating which user sent the message.
+4. The friends list in the users collection might link to other user documents, establishing a network of connections between users.
+
+This data model allows for efficient querying and retrieval of chat sessions, individual messages, user posts, and user details. It supports the core features of a chat application while providing flexibility for future enhancements.
+
+
+
+
+Installation:
 npm install --save react-native-swipeout   
 npm install --save react-native-swipe-list-view
-
-Description: We use 3 collections in our project: chats, posts and users.  
-chats:   
-It stores all chat sessions. Each session represents a chat room between two users. A session includes a collection called "messages" and a doc.  
-    The collection "messages" stores all messages and their relevant information. Each message is a doc that includes three fields: createdAt, text and userId.  
-    The doc stores information about the chat room in general. It includes 5 fields: deleteBy(who deleted this chat on their device), lastMessage, lastMessageTime, members(a list of two users) and pinned(boolean).  
-
-posts:  
-It stores all posts that user sent. Each post has three fields: title, gps and description. Title is the title of the post. Gps is the location where this post is created. Description is the content of the post.
-
-users:  
-It stores all users. Each user has three fields: email, friends(friend list) and name. More fields such as avatar and preferences will be added.
