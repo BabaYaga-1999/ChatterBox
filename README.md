@@ -11,7 +11,7 @@ There are three primary collections:
 - posts
 - users
 
-1. Detailed Description:
+2. Detailed Description:
 
   i. chats:
 
@@ -51,7 +51,7 @@ There are three primary collections:
   - name: The name of the user.
   - Future enhancements may include fields like avatar, preferences, etc.
 
- 3. Relationships:
+3. Relationships:
 
 1. Each user can be a part of multiple chat sessions in the chats collection.
 2. Each user can have multiple posts in the posts collection.

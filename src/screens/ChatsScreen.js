@@ -37,7 +37,6 @@ const ChatsScreen = ({ navigation }) => {
     const chatQuery = query(
       collection(db, 'chats'),
       where('members', 'array-contains', currentUserId),
-      orderBy('pinned', 'desc'),
       orderBy('lastMessageTime', 'desc')
     );
 
@@ -63,8 +62,21 @@ const ChatsScreen = ({ navigation }) => {
         return false;
       });
 
-      setChats(visibleChats);
-      fetchUserNames(visibleChats);
+      const pinnedChats = visibleChats.filter(chat => chat.pinnedUsers.some(p => p.uid === currentUserId));
+      const unpinnedChats = visibleChats.filter(chat => !chat.pinnedUsers.some(p => p.uid === currentUserId));
+
+      // Sort each list based on lastMessageTime
+      pinnedChats.sort((a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime));
+      unpinnedChats.sort((a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime));
+
+      // Combine the two lists
+      const allChats = [...pinnedChats, ...unpinnedChats];
+
+      setChats(allChats);
+      fetchUserNames(allChats);
+
+      // setChats(visibleChats);
+      // fetchUserNames(visibleChats);
     });
     return () => unsubscribe();
   }, []);
@@ -126,8 +138,18 @@ const ChatsScreen = ({ navigation }) => {
   };
 
   const togglePinChat = async (chat, rowMap) => {
-    const pinned = !chat.pinned;
-    await updateDoc(doc(db, 'chats', chat.id), { pinned });
+    const userPinned = chat.pinnedUsers.some(p => p.uid === auth.currentUser.uid);
+    let updatedPinnedUsers = [...chat.pinnedUsers];
+
+    if (userPinned) {
+        // Unpin: Remove user from the array
+        updatedPinnedUsers = updatedPinnedUsers.filter(p => p.uid !== auth.currentUser.uid);
+    } else {
+        // Pin: Add user to the array
+        updatedPinnedUsers.push({ uid: auth.currentUser.uid });
+    }
+
+    await updateDoc(doc(db, 'chats', chat.id), { pinnedUsers: updatedPinnedUsers });
 
     // Close the open SwipeListView item
     if (rowMap[chat.id] && rowMap[chat.id].closeRow) {
@@ -181,12 +203,12 @@ const ChatsScreen = ({ navigation }) => {
             style={[
                 styles.backRightBtn,
                 styles.backRightBtnLeft,
-                { backgroundColor: data.item.pinned ? '#1E90FF' : '#32CD32' }  // change color based on pinned status
+                { backgroundColor: data.item.pinnedUsers.some(p => p.uid === auth.currentUser.uid) ? '#1E90FF' : '#32CD32' }  // change color based on pinned status
             ]}
             onPress={() => togglePinChat(data.item, rowMap)}
         >
             <Text style={styles.backTextWhite}>
-                {data.item.pinned ? 'Unpin' : 'Pin'}
+                {data.item.pinnedUsers.some(p => p.uid === auth.currentUser.uid) ? 'Unpin' : 'Pin'}
             </Text>
         </TouchableOpacity>
         <TouchableOpacity

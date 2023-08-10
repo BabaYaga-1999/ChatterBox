@@ -48,7 +48,7 @@ const FriendsScreen = ({ navigation }) => {
         members: [currentUserId, friend.id],
         lastMessage: '',
         lastMessageTime: new Date().toISOString(),
-        pinned: false,  // default value for pinned
+        pinnedUsers: [],  // keeping track of users who pinned the chat
         deletedBy: []
       };
       const newChatDocRef = await addDoc(chatsRef, newChatData);
