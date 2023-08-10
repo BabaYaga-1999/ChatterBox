@@ -41,7 +41,7 @@ const FriendsScreen = ({ navigation }) => {
 
     if (existingChat) {
       // Navigate to the existing chat
-      navigation.navigate('Chat', { chatId: existingChat.id });
+      navigation.navigate('Chat', { chatId: existingChat.id, friendName: friend.name });
     } else {
       // Create a new chat in the database with the pinned field
       const newChatData = {
@@ -54,7 +54,7 @@ const FriendsScreen = ({ navigation }) => {
       const newChatDocRef = await addDoc(chatsRef, newChatData);
       
       // Navigate to the new chat
-      navigation.navigate('Chat', { chatId: newChatDocRef.id });
+      navigation.navigate('Chat', { chatId: newChatDocRef.id, friendName: friend.name });
     }
   };
 

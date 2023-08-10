@@ -8,7 +8,12 @@ const ChatScreen = ({ route, navigation }) => {
   const [input, setInput] = useState('');
   const [userDeletionTimestamp, setUserDeletionTimestamp] = useState(null);
 
-  const { chatId } = route.params;
+  const { chatId, friendName } = route.params;
+
+  useEffect(() => {
+    // Set the friend's name as the header title when the component mounts
+    navigation.setOptions({ title: friendName });
+  }, [friendName, navigation]);
 
   useEffect(() => {
     // Fetch the chat document to get the deletedBy data for the current user
@@ -26,6 +31,7 @@ const ChatScreen = ({ route, navigation }) => {
   }, [chatId]);
 
   useEffect(() => {
+    // Fetch messages from the database
     const unsubscribe = onSnapshot(collection(db, 'chats', chatId, 'messages'), (snapshot) => {
       let fetchedMessages = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
       
@@ -64,17 +70,10 @@ const ChatScreen = ({ route, navigation }) => {
 
       if (chatDoc.exists()) {
           const deletedByData = chatDoc.data().deletedBy;
-
-          // Log to see the current state of deletedByData
-          console.log('Before Update:', deletedByData);
-
           const updatedDeletedBy = deletedByData.map(user => ({
               ...user,
               active: false
           }));
-
-          // Log to see the updated state
-          console.log('After Update:', updatedDeletedBy);
 
           await updateDoc(chatRef, {
               deletedBy: updatedDeletedBy

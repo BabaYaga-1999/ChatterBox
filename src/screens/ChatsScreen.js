@@ -69,8 +69,8 @@ const ChatsScreen = ({ navigation }) => {
     return () => unsubscribe();
   }, []);
 
-  const navigateToChat = (chatId) => {
-    navigation.navigate('Chat', { chatId });
+  const navigateToChat = (chatId, friendName) => {
+    navigation.navigate('Chat', { chatId, friendName });
   };
 
   const deleteChat = async (chatId, rowMap) => {
@@ -156,7 +156,10 @@ const ChatsScreen = ({ navigation }) => {
 
   const renderItem = ({ item }) => (
     <TouchableHighlight
-      onPress={() => navigateToChat(item.id)}
+      onPress={() => {
+        const friendName = userNames[item.members.find(id => id !== auth.currentUser.uid)] || "Unknown";
+        navigateToChat(item.id, friendName);
+      }}
       underlayColor={'#fff'}
     >
       <View style={styles.chatItem}>
