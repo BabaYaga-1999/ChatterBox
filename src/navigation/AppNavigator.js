@@ -55,7 +55,7 @@ const AppNavigator = () => {
           component={TabNavigator} 
           options={{ headerShown: false }}
         />
-        <Stack.Screen name="ChatsScreen" component={ChatsScreen} />
+        {/* <Stack.Screen name="ChatsScreen" component={ChatsScreen} /> */}
       </>
     )}
     </Stack.Navigator>

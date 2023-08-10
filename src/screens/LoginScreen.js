@@ -10,8 +10,8 @@ export default function LoginScreen({ navigation }) {
   const loginHandler = async () => {
     try {
       const userCred = await signInWithEmailAndPassword(auth, email, password);
-      console.log(userCred);
-      navigation.navigate('ChatsScreen');
+      // console.log(userCred);
+      navigation.navigate('Home');
     } catch (err) {
       console.log("Login error: ", err);
       Alert.alert(err.message);
@@ -19,7 +19,7 @@ export default function LoginScreen({ navigation }) {
   };
 
   const signupHandler = () => {
-    navigation.replace('Signup'); // 假设您的注册页面的名称是'SignupScreen'
+    navigation.replace('Signup');
   };
 
   return (
