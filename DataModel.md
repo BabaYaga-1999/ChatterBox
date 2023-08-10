@@ -1,8 +1,3 @@
-Team members:  
-Yucheng Wang  
-Xiangyuan Ding
-
-Data Model
 1. Collections:
 
 There are three primary collections:
@@ -59,10 +54,3 @@ There are three primary collections:
 4. The friends list in the users collection might link to other user documents, establishing a network of connections between users.
 
 This data model allows for efficient querying and retrieval of chat sessions, individual messages, user posts, and user details. It supports the core features of a chat application while providing flexibility for future enhancements.
-
-
-
-
-Installation:
-npm install --save react-native-swipeout   
-npm install --save react-native-swipe-list-view
