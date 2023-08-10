@@ -63,6 +63,6 @@ This data model allows for efficient querying and retrieval of chat sessions, in
 
 
 
-Installation:
+Installations:
 npm install --save react-native-swipeout   
 npm install --save react-native-swipe-list-view
