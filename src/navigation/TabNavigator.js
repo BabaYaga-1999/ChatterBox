@@ -14,76 +14,55 @@ import Styles from '../styles/Styles';
 import CreatePost from '../screens/CreatePost';
 
 const Tab = createBottomTabNavigator();
-const FriendStack = createStackNavigator();
-const DiscoverStack = createStackNavigator();
-const ChatStack = createStackNavigator();
 
-const ChatStackNavigator = () => {
-  return (
-    <ChatStack.Navigator>
-      <ChatStack.Screen 
-        name="Chats List" 
-        component={ChatsScreen} 
-      />
-      <ChatStack.Screen 
-        name="Chat" 
-        component={ChatScreen}
-      />
-    </ChatStack.Navigator>
-  );
-};
+// const FriendsStack = createStackNavigator();
 
-const FriendStackNavigator = () => {
-  return (
-    <FriendStack.Navigator>
-      <FriendStack.Screen 
-        name="Friends List" 
-        component={FriendsScreen}
-        options={({ navigation }) => ({
-          headerRight: () => (
-            <TouchableOpacity onPress={() => navigation.navigate('Search Friend')}>
-              <View style={{ marginRight: 15 }}>
-                <Entypo name="plus" size={24} color="black" />
-              </View>
-            </TouchableOpacity>
-          ),
-        })}
-      />
-      <FriendStack.Screen name="Search Friend" component={SearchScreen} />
-      <FriendStack.Screen 
-        name="Chat" 
-        component={ChatScreen} 
-      />
-    </FriendStack.Navigator>
-  );
-};
+// const FriendsStackNavigator = ({ navigation }) => {
+//   return (
+//     <FriendsStack.Navigator>
+//       <FriendsStack.Screen 
+//         name="Friends List" 
+//         component={FriendsScreen}
+//         options={{
+//           headerRight: () => (
+//             <TouchableOpacity onPress={() => navigation.navigate('Search Friend')}>
+//               <View style={{ marginRight: 15 }}>
+//                 <Entypo name="plus" size={24} color="black" />
+//               </View>
+//             </TouchableOpacity>
+//           ),
+//         }}
+//       />
+//     </FriendsStack.Navigator>
+//   );
+// };
 
-const DiscoverStackNavigator = () => {
-  return (
-    <DiscoverStack.Navigator>
-      <DiscoverStack.Screen 
-        name="Discover Screen" 
-        component={DiscoverScreen}
-        options={({ navigation }) => ({
-          headerRight: () => (
-            <TouchableOpacity onPress={() => navigation.navigate('Create Post')}>
-              <View style={{ marginRight: 15 }}>
-                <Entypo name="plus" size={24} color="black" />
-              </View>
-            </TouchableOpacity>
-          ),
-        })}
-      />
-    <DiscoverStack.Screen name="Create Post" component={CreatePost} />
-  </DiscoverStack.Navigator>
-  )
-}
+// const DiscoverStack = createStackNavigator();
 
-const TabNavigator = () => {
+// const DiscoverStackNavigator = ({ navigation }) => {
+//   return (
+//     <DiscoverStack.Navigator>
+//       <DiscoverStack.Screen 
+//         name="Discover Screen" 
+//         component={DiscoverScreen}
+//         options={{
+//           headerRight: () => (
+//             <TouchableOpacity onPress={() => navigation.navigate('Create Post')}>
+//               <View style={{ marginRight: 15 }}>
+//                 <Entypo name="plus" size={24} color="black" />
+//               </View>
+//             </TouchableOpacity>
+//           ),
+//         }}
+//       />
+//     </DiscoverStack.Navigator>
+//   );
+// };
+
+const TabNavigator = ({ navigation }) => {
   return (
     <Tab.Navigator
-      screenOptions={({ route, navigation }) => ({
-        tabBarVisible: route.name !== 'Chat',  // Hide tabBar for Chat screen
+      screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size }) => {
           switch (route.name) {
               case 'Chats':
@@ -102,20 +81,43 @@ const TabNavigator = () => {
         tabBarInactiveTintColor: 'gray',
         tabBarLabelStyle: Styles.tabBarLabel,
         headerTitleAlign: 'center',
-        headerShown: route.name === 'Friends' || route.name==="Discover" || route.name==="Chats"? false : true,
-        // headerRight: () => (
-        //   <TouchableOpacity onPress={() => navigation.navigate('Add Entry')}>
-        //     <View style={{ marginRight: 15 }}>
-        //       <Entypo name="plus" size={24} color="black" />
-        //     </View>
-        //   </TouchableOpacity>
-        // ),
+        // headerShown: route.name === 'Friends' || route.name === "Discover" || route.name === "Chats" ? false : true,
       })}
     >
-      <Tab.Screen name="Chats" component={ChatStackNavigator} />
-      <Tab.Screen name="Friends" component={FriendStackNavigator} />
-      <Tab.Screen name="Discover" component={DiscoverStackNavigator} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen 
+        name="Chats" 
+        component={ChatsScreen} 
+      />
+      <Tab.Screen 
+        name="Friends" 
+        component={FriendsScreen}
+        options={{
+          headerRight: () => (
+            <TouchableOpacity onPress={() => navigation.navigate('Search Friend')}>
+              <View style={{ marginRight: 15 }}>
+                <Entypo name="plus" size={24} color="black" />
+              </View>
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Tab.Screen 
+        name="Discover" 
+        component={DiscoverScreen}
+        options={{
+          headerRight: () => (
+            <TouchableOpacity onPress={() => navigation.navigate('Create Post')}>
+              <View style={{ marginRight: 15 }}>
+                <Entypo name="plus" size={24} color="black" />
+              </View>
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileScreen} 
+      />
     </Tab.Navigator>
   );
 };
