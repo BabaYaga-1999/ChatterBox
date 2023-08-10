@@ -72,7 +72,7 @@ const DiscoverScreen = () => {
         {
           postList.map((item)=>{
             return (
-              <Marker coordinate={{latitude: item.gps.coords.latitude, longitude: item.gps.coords.longitude }}>
+              <Marker coordinate={{latitude: item.gps.coords.latitude, longitude: item.gps.coords.longitude }} key={item.key}>
                 <Ionicons name="chatbox-ellipses-sharp" size={40} color="red" />
               </Marker>)
           })
