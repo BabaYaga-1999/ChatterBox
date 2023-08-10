@@ -47,7 +47,7 @@ const DiscoverScreen = () => {
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "posts"), (querySnapshot) => {
         const newList = querySnapshot.docs.map((item) => {
-          return { ...item.data(), id: item.id };
+          return { ...item.data(), key: item.id };
         });
         setPostList(newList);
 
