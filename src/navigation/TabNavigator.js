@@ -16,6 +16,22 @@ import CreatePost from '../screens/CreatePost';
 const Tab = createBottomTabNavigator();
 const FriendStack = createStackNavigator();
 const DiscoverStack = createStackNavigator();
+const ChatStack = createStackNavigator();
+
+const ChatStackNavigator = () => {
+  return (
+    <ChatStack.Navigator>
+      <ChatStack.Screen 
+        name="Chats List" 
+        component={ChatsScreen} 
+      />
+      <ChatStack.Screen 
+        name="Chat" 
+        component={ChatScreen}
+      />
+    </ChatStack.Navigator>
+  );
+};
 
 const FriendStackNavigator = () => {
   return (
@@ -34,7 +50,10 @@ const FriendStackNavigator = () => {
         })}
       />
       <FriendStack.Screen name="Search Friend" component={SearchScreen} />
-      <FriendStack.Screen name="Chat" component={ChatScreen} />
+      <FriendStack.Screen 
+        name="Chat" 
+        component={ChatScreen} 
+      />
     </FriendStack.Navigator>
   );
 };
@@ -64,6 +83,7 @@ const TabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route, navigation }) => ({
+        tabBarVisible: route.name !== 'Chat',  // Hide tabBar for Chat screen
         tabBarIcon: ({ color, size }) => {
           switch (route.name) {
               case 'Chats':
@@ -82,7 +102,7 @@ const TabNavigator = () => {
         tabBarInactiveTintColor: 'gray',
         tabBarLabelStyle: Styles.tabBarLabel,
         headerTitleAlign: 'center',
-        headerShown: route.name === 'Friends' || route.name==="Discover" ? false : true,
+        headerShown: route.name === 'Friends' || route.name==="Discover" || route.name==="Chats"? false : true,
         // headerRight: () => (
         //   <TouchableOpacity onPress={() => navigation.navigate('Add Entry')}>
         //     <View style={{ marginRight: 15 }}>
@@ -92,7 +112,7 @@ const TabNavigator = () => {
         // ),
       })}
     >
-      <Tab.Screen name="Chats" component={ChatsScreen} />
+      <Tab.Screen name="Chats" component={ChatStackNavigator} />
       <Tab.Screen name="Friends" component={FriendStackNavigator} />
       <Tab.Screen name="Discover" component={DiscoverStackNavigator} />
       <Tab.Screen name="Profile" component={ProfileScreen} />

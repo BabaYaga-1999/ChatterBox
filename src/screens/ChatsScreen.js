@@ -4,6 +4,16 @@ import { SwipeListView } from 'react-native-swipe-list-view';
 import { db, auth } from '../utils/Firebase';
 import { collection, onSnapshot, query, orderBy, doc, deleteDoc, getDoc, updateDoc, where } from 'firebase/firestore';
 
+// Utility function to check if user has deleted the chat
+const hasUserDeletedChat = (deletedBy, uid) => {
+  return deletedBy.some(user => user.uid === uid);
+};
+
+const getDeletionTimestampForUser = (deletedBy, uid) => {
+  const deletionInfo = deletedBy.find(user => user.uid === uid);
+  return deletionInfo ? deletionInfo.timestamp : null;
+};
+
 const ChatsScreen = ({ navigation }) => {
   const [chats, setChats] = useState([]);
   const [userNames, setUserNames] = useState({}); 
@@ -33,18 +43,86 @@ const ChatsScreen = ({ navigation }) => {
 
     const unsubscribe = onSnapshot(chatQuery, async (snapshot) => {
       const chatsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-      setChats(chatsData);
-      fetchUserNames(chatsData);
+      
+      // Filter out chats that the current user has deleted
+      // And only include chats that have a lastMessage
+      const visibleChats = chatsData.filter(chat => {
+        if (chat.lastMessage) {
+          const lastMessageTimestamp = new Date(chat.lastMessageTime).getTime();
+
+          if (!hasUserDeletedChat(chat.deletedBy, currentUserId)) {
+            return true;
+          }
+
+          const userDeletionTimestamp = getDeletionTimestampForUser(chat.deletedBy, currentUserId);
+
+          if (userDeletionTimestamp && lastMessageTimestamp > userDeletionTimestamp) {
+            return true;
+          }
+        }
+        return false;
+      });
+
+      setChats(visibleChats);
+      fetchUserNames(visibleChats);
     });
     return () => unsubscribe();
   }, []);
 
-  const navigateToChat = (chatId) => {
-    navigation.navigate('Chat', { chatId });
+  const navigateToChat = (chatId, friendName) => {
+    navigation.navigate('Chat', { chatId, friendName });
   };
 
-  const deleteChat = async (chatId) => {
-    await deleteDoc(doc(db, 'chats', chatId));
+  const deleteChat = async (chatId, rowMap) => {
+    const chatRef = doc(db, 'chats', chatId);
+    const chatDoc = await getDoc(chatRef);
+
+    if (chatDoc.exists()) {
+      const data = chatDoc.data();
+
+      // Check if chat is pinned and unpin it
+      if (data.pinned) {
+        await updateDoc(chatRef, { pinned: false });
+      }
+
+      let updatedDeletedBy = [...data.deletedBy];
+      const currentUserDeletionIndex = updatedDeletedBy.findIndex(user => user.uid === auth.currentUser.uid);
+
+      const currentUserDeletionInfo = {
+        uid: auth.currentUser.uid,
+        timestamp: Date.now(),
+        active: true,
+      };
+
+      // Update or add the current user's deletion info
+      if (currentUserDeletionIndex === -1) {
+        // User not in deletedBy, add them
+        updatedDeletedBy.push(currentUserDeletionInfo);
+      } else {
+        // User already in deletedBy, update their timestamp
+        updatedDeletedBy[currentUserDeletionIndex] = currentUserDeletionInfo;
+      }
+
+      await updateDoc(chatRef, {
+        deletedBy: updatedDeletedBy
+      });
+
+      // Check if all members have deleted the chat and their status is active
+      const allMembersDeleted = data.members.every(memberId => {
+        const userDeletionInfo = updatedDeletedBy.find(user => user.uid === memberId);
+        return userDeletionInfo && userDeletionInfo.active;
+      });
+
+      // If all members have deleted the chat, delete the chat document in Firebase
+      if (allMembersDeleted) {
+        await deleteDoc(chatRef);
+      }
+    }
+
+      // Close the open SwipeListView item
+      if (rowMap[chatId] && rowMap[chatId].closeRow) {
+        rowMap[chatId].closeRow();
+      }
   };
 
   const togglePinChat = async (chat, rowMap) => {
@@ -52,7 +130,7 @@ const ChatsScreen = ({ navigation }) => {
     await updateDoc(doc(db, 'chats', chat.id), { pinned });
 
     // Close the open SwipeListView item
-    if (rowMap[chat.id]) {
+    if (rowMap[chat.id] && rowMap[chat.id].closeRow) {
         rowMap[chat.id].closeRow();
     }
   };
@@ -78,7 +156,10 @@ const ChatsScreen = ({ navigation }) => {
 
   const renderItem = ({ item }) => (
     <TouchableHighlight
-      onPress={() => navigateToChat(item.id)}
+      onPress={() => {
+        const friendName = userNames[item.members.find(id => id !== auth.currentUser.uid)] || "Unknown";
+        navigateToChat(item.id, friendName);
+      }}
       underlayColor={'#fff'}
     >
       <View style={styles.chatItem}>
@@ -110,7 +191,7 @@ const ChatsScreen = ({ navigation }) => {
         </TouchableOpacity>
         <TouchableOpacity
             style={[styles.backRightBtn, styles.backRightBtnRight]}
-            onPress={() => deleteChat(data.item.id)}
+            onPress={() => deleteChat(data.item.id, rowMap)}  // Add rowMap as a parameter
         >
             <Text style={styles.backTextWhite}>Delete</Text>
         </TouchableOpacity>
