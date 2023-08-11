@@ -108,7 +108,7 @@ const ChatScreen = ({ route, navigation }) => {
 };
 
 return (
-  <SafeAreaView style={{ flex: 1 }}>
+  <SafeAreaView style={styles.SafeAreaView}>
     <KeyboardAvoidingView
     style={styles.container}
     behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -154,13 +154,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'space-between',
-    // backgroundColor: 'white'
+    backgroundColor: 'white'
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     margin: 10,
-    marginBottom: 5
+    marginBottom: 5,
   },
   input: {
     flex: 1,
@@ -188,6 +188,10 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: 16,
+  },
+  SafeAreaView: {
+    flex: 1,
+    backgroundColor: 'white'
   }
 });
 

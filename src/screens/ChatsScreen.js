@@ -3,6 +3,7 @@ import { View, Text, TouchableHighlight, StyleSheet, TouchableOpacity } from 're
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { db, auth } from '../utils/Firebase';
 import { collection, onSnapshot, query, orderBy, doc, deleteDoc, getDoc, updateDoc, where } from 'firebase/firestore';
+import { chatStyles as styles } from '../styles/Styles';
 
 // Utility function to check if user has deleted the chat
 const hasUserDeletedChat = (deletedBy, uid) => {
@@ -235,53 +236,5 @@ const ChatsScreen = ({ navigation }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f0f0f0',
-  },
-  listViewContent: {
-    width: '100%',
-  },
-  chatItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    backgroundColor: '#fff',
-    width: '100%',
-  },
-  rowBack: {
-    alignItems: 'center',
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    backgroundColor: '#f0f0f0',
-    width: '100%',
-  },
-  backRightBtn: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'absolute',
-    width: 75,
-    bottom: 1,
-    top: 1,
-  },
-  backRightBtnLeft: {
-    backgroundColor: '#32CD32',
-    right: 75,
-  },
-  backRightBtnRight: {
-    backgroundColor: '#FF3333',
-    right: 0,
-  },
-  backTextWhite: {
-    color: '#FFF',
-    fontWeight: 'bold',
-  },
-});
 
 export default ChatsScreen;
