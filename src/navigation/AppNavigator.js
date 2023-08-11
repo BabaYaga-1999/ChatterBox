@@ -29,7 +29,7 @@ const MainStackNavigator = () => {
         component={ChatScreen} 
       />
       <MainStack.Screen 
-        name="Search Friend" 
+        name="Add Friend" 
         component={SearchScreen} 
       />
       <MainStack.Screen 

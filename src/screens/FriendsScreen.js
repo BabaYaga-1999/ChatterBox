@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image, TextInput } from 'react-native';
+import { View, Text, FlatList, TouchableHighlight, Image, TextInput, StyleSheet } from 'react-native';
 import { db, auth } from '../utils/Firebase';
 import { collection, addDoc, query, where, getDocs, doc, onSnapshot } from 'firebase/firestore';
+import { friendStyles as styles } from '../styles/Styles';
+import { AntDesign } from '@expo/vector-icons';
 
 const FriendsScreen = ({ navigation }) => {
   const [friends, setFriends] = useState([]);
@@ -22,6 +24,7 @@ const FriendsScreen = ({ navigation }) => {
   }, []);
 
   const filteredFriends = friends.filter(friend => friend.name.toLowerCase().includes(searchText.toLowerCase()));
+  const sortedFriends = filteredFriends.sort((a, b) => a.name.localeCompare(b.name));
 
   const startChat = async (friend) => {
     const currentUserId = auth.currentUser.uid;
@@ -59,25 +62,34 @@ const FriendsScreen = ({ navigation }) => {
   };
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity onPress={() => startChat(item)}>
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <Image source={{ uri: item.avatar }} style={{ width: 50, height: 50, borderRadius: 25 }} />
-        <Text>{item.name}</Text>
+    <TouchableHighlight
+      underlayColor={'#f0f0f0'}
+      onPress={() => startChat(item)}
+      style={styles.listItem}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+          <Image source={{ uri: item.avatar }} style={styles.avatar} />
+          <Text style={styles.friendName}>{item.name}</Text>
       </View>
-    </TouchableOpacity>
-  );
+    </TouchableHighlight>
+    );
 
   return (
-    <View>
-      {/* <TextInput
-        placeholder="Search for friends..."
-        value={searchText}
-        onChangeText={setSearchText}
-      /> */}
+    <View style={styles.container}>
+      <View style={styles.searchContainer}>
+          <AntDesign name="search1" size={20} color="#aaa" style={styles.searchIcon} />
+          <TextInput
+              placeholder="Search"
+              placeholderTextColor="#aaa" 
+              value={searchText}
+              onChangeText={setSearchText}
+              style={styles.searchInput}
+          />
+      </View>
       <FlatList
-        data={filteredFriends}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
+          data={sortedFriends}
+          renderItem={renderItem}
+          keyExtractor={item => item.id}
       />
     </View>
   );

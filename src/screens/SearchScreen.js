@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text, Alert } from 'react-native';
+import { View, TextInput, Button, Text, Alert, StyleSheet } from 'react-native';
 import { auth, db } from '../utils/Firebase';
 import { query, where, getDocs, collection, updateDoc, arrayUnion, doc, getDoc } from 'firebase/firestore';
+import { searchStyles as styles } from '../styles/Styles'
+import { AntDesign } from '@expo/vector-icons';
+import PressButton from '../components/PressButton';
 
 const SearchScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -88,7 +91,6 @@ const SearchScreen = ({ navigation }) => {
         [
           {
             text: "Cancel",
-            style: "cancel"
           },
           { 
             text: "Yes", 
@@ -101,15 +103,30 @@ const SearchScreen = ({ navigation }) => {
     }
   };
 
+  const resetSearch = () => {
+    setEmail('');  // clear input
+  }
+
   return (
-    <View>
-      <TextInput 
-        placeholder="Enter User Email" 
-        value={email} 
-        onChangeText={setEmail} 
-      />
-      <Button title="Search" onPress={searchFriendByEmail} />
-      <Text>{message}</Text>
+    <View style={styles.container}>
+      <View style={styles.searchContainer}>
+        <AntDesign name="search1" size={20} color="#aaa" style={styles.searchIcon} />
+        <TextInput 
+          placeholder="Enter User Email"
+          placeholderTextColor="#aaa" 
+          value={email} 
+          onChangeText={(text) => {
+            setEmail(text);
+            if (message) setMessage('');
+          }}
+          style={styles.searchInput} 
+        />
+      </View>
+      <View style={styles.buttonContainer}>
+        <PressButton text="Reset" handlePress={resetSearch} width="30%" />
+        <PressButton text="Search" handlePress={searchFriendByEmail} width="30%" />
+      </View>
+      <Text style={styles.messageText}>{message}</Text>
     </View>
   );
 };
