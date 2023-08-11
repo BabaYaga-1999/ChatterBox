@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, FlatList } from 'react-native';
+import React, { useRef, useState, useEffect } from 'react';
+import { View, Text, TextInput, Button, FlatList, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { collection, addDoc, onSnapshot, updateDoc, doc, getDoc, getDocs } from 'firebase/firestore';
 import { db, auth } from '../utils/Firebase';
+import { SafeAreaView } from 'react-native';
 
 const ChatScreen = ({ route, navigation }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [userDeletionTimestamp, setUserDeletionTimestamp] = useState(null);
+  const flatListRef = useRef(null);
 
   const { chatId, friendName } = route.params;
 
@@ -30,19 +32,22 @@ const ChatScreen = ({ route, navigation }) => {
     fetchChatDeletionTimestamp();
   }, [chatId]);
 
+  // Fetch messages from the database
   useEffect(() => {
-    // Fetch messages from the database
     const unsubscribe = onSnapshot(collection(db, 'chats', chatId, 'messages'), (snapshot) => {
       let fetchedMessages = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-      
+        
       // Filter messages that were sent before the user deleted the chat
       if (userDeletionTimestamp) {
-          fetchedMessages = fetchedMessages.filter(message => 
-              new Date(message.createdAt).getTime() > userDeletionTimestamp
-          );
+        fetchedMessages = fetchedMessages.filter(message => 
+          new Date(message.createdAt).getTime() > userDeletionTimestamp
+        );
       }
 
-      setMessages(fetchedMessages.reverse());
+      // Sort messages by createdAt to ensure they're displayed in order
+      fetchedMessages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+      setMessages(fetchedMessages);
     });
 
     return () => unsubscribe();
@@ -84,32 +89,106 @@ const ChatScreen = ({ route, navigation }) => {
       }
   };
 
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
+    const today = new Date();
 
-  return (
-    <View style={{ flex: 1 }}>
-      <View style={{ flex: 1 }}>
-        <FlatList
-          data={messages}
-          renderItem={({ item }) => (
-            <View style={{ flexDirection: 'row' }}>
-              <Text>{item.text}</Text>
-            </View>
-          )}
-          keyExtractor={(item) => item.id}
-        />
-      </View>
+    if (date.toDateString() === today.toDateString()) {
+      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    } else {
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+  };
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', margin: 10 }}>
+  // Scroll to the bottom of the FlatList when a new message is sent
+  const scrollToBottom = () => {
+    if (messages.length > 0) {
+        flatListRef.current.scrollToEnd({ animated: true });
+    }
+};
+
+return (
+  <SafeAreaView style={{ flex: 1 }}>
+    <KeyboardAvoidingView
+    style={styles.container}
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+    keyboardVerticalOffset={Platform.OS === "ios" ? 95 : 95}
+  >
+    <FlatList
+      ref={flatListRef}
+      data={messages}
+      renderItem={({ item }) => (
+        <View style={{ padding: 10 }}>
+          <Text style={{ textAlign: 'center', color: 'grey' }}>{formatTimestamp(item.createdAt)}</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            {item.userId !== auth.currentUser.uid && <Text style={{ color: 'grey', fontWeight: 'bold', flex: 1 }}>{friendName}</Text>}
+          </View>
+          <View style={[
+            styles.messageBox,
+            item.userId === auth.currentUser.uid ? styles.rightMsg : styles.leftMsg
+          ]}>
+            <Text style={styles.messageText}>{item.text}</Text>
+          </View>
+        </View>
+      )}
+      keyExtractor={(item) => item.id}
+      onContentSizeChange={scrollToBottom}
+      onLayout={scrollToBottom}
+    />
+
+      <View style={styles.inputContainer}>
         <TextInput
           value={input}
           onChangeText={setInput}
-          style={{ flex: 1, borderColor: 'gray', borderWidth: 1, borderRadius: 5 }}
+          style={styles.input}
           placeholder="Type a message..."
         />
         <Button title="Send" onPress={sendMessage} />
       </View>
-    </View>
-  );
+    </KeyboardAvoidingView>
+  </SafeAreaView>
+);
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'space-between',
+    // backgroundColor: 'white'
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    margin: 10,
+    marginBottom: 5
+  },
+  input: {
+    flex: 1,
+    borderColor: 'gray',
+    borderWidth: 1,
+    borderRadius: 5,
+    marginRight: 10,
+    padding: 10,
+  },
+  messageBox: {
+    padding: 10,
+    borderRadius: 10,
+    margin: 5,
+    maxWidth: '75%',
+  },
+  leftMsg: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFD1DC',
+    flex: 2
+  },
+  rightMsg: {
+    alignSelf: 'flex-end',
+    backgroundColor: '#A8E6CF',
+    flex: 2  // Adjust flex for message alignment
+  },
+  messageText: {
+    fontSize: 16,
+  }
+});
 
 export default ChatScreen;
