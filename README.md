@@ -32,7 +32,7 @@ There are three primary collections:
     - lastMessage: The last message exchanged in this chat room.
     - lastMessageTime: Timestamp indicating when the last message was sent.
     - members: A list containing the IDs of the two users in the chat.
-    - pinned: A boolean indicating if the chat has been pinned or not.
+    - pinnedUsers: A containing the IDs of the users who pinned the chat.
 
  ii. posts:
 
