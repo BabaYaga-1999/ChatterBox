@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, FlatList, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { collection, addDoc, onSnapshot, updateDoc, doc, getDoc, getDocs } from 'firebase/firestore';
+import { View, Text, TextInput, Button, FlatList, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../utils/Firebase';
 import { SafeAreaView } from 'react-native';
 
@@ -8,17 +8,50 @@ const ChatScreen = ({ route, navigation }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [userDeletionTimestamp, setUserDeletionTimestamp] = useState(null);
+  const [canSendMessage, setCanSendMessage] = useState(true);
   const flatListRef = useRef(null);
-
   const { chatId, friendName } = route.params;
 
   useEffect(() => {
-    // Set the friend's name as the header title when the component mounts
+    let unsubscribe = null;
+
+    const checkFriendshipStatus = async () => {
+        const chatDoc = await getDoc(doc(db, 'chats', chatId));
+        const members = chatDoc.data().members;
+        const friendId = members.find(id => id !== auth.currentUser.uid);
+
+        const friendRef = doc(db, 'users', friendId);
+        unsubscribe = onSnapshot(friendRef, (friendDoc) => {
+            if (!friendDoc.exists()) {
+                console.error("Friend doesn't exist:", friendId);
+                return;
+            }
+
+            const friendList = friendDoc.data().friends || [];
+            const currentUserInFriendList = friendList.find(f => f.id === auth.currentUser.uid);
+
+            if (!currentUserInFriendList) {
+                setCanSendMessage(false);
+            } else {
+                setCanSendMessage(true);
+            }
+        });
+    };
+
+    checkFriendshipStatus();
+    
+    return () => {
+        if (unsubscribe) {
+            unsubscribe();
+        }
+    };
+  }, [chatId]);
+
+  useEffect(() => {
     navigation.setOptions({ title: friendName });
   }, [friendName, navigation]);
 
   useEffect(() => {
-    // Fetch the chat document to get the deletedBy data for the current user
     const fetchChatDeletionTimestamp = async () => {
       const chatRef = doc(db, 'chats', chatId);
       const chatDoc = await getDoc(chatRef);
@@ -28,28 +61,20 @@ const ChatScreen = ({ route, navigation }) => {
         setUserDeletionTimestamp(currentUserDeletion.timestamp);
       }
     };
-
     fetchChatDeletionTimestamp();
   }, [chatId]);
 
-  // Fetch messages from the database
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'chats', chatId, 'messages'), (snapshot) => {
       let fetchedMessages = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-        
-      // Filter messages that were sent before the user deleted the chat
       if (userDeletionTimestamp) {
         fetchedMessages = fetchedMessages.filter(message => 
           new Date(message.createdAt).getTime() > userDeletionTimestamp
         );
       }
-
-      // Sort messages by createdAt to ensure they're displayed in order
       fetchedMessages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-
       setMessages(fetchedMessages);
     });
-
     return () => unsubscribe();
   }, [chatId, userDeletionTimestamp]);
 
@@ -93,11 +118,19 @@ const ChatScreen = ({ route, navigation }) => {
     const date = new Date(timestamp);
     const today = new Date();
 
+    const timeString = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+    // If the message was sent today, only return the time
     if (date.toDateString() === today.toDateString()) {
-      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-    } else {
-      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+      return { time: timeString };
     }
+
+    // If the message was sent before today, return the date and time
+    const dateString = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return {
+      date: dateString,
+      time: timeString
+    };
   };
 
   // Scroll to the bottom of the FlatList when a new message is sent
@@ -105,7 +138,76 @@ const ChatScreen = ({ route, navigation }) => {
     if (messages.length > 0) {
         flatListRef.current.scrollToEnd({ animated: true });
     }
-};
+  };
+
+  const checkIfInFriendList = async () => {
+    try {
+      // 获取当前聊天的成员
+      const chatDoc = await getDoc(doc(db, 'chats', chatId));
+      if (!chatDoc.exists()) {
+        console.error("Chat doesn't exist:", chatId);
+        return;
+      }
+
+      const members = chatDoc.data().members;
+      // 获取对方的ID
+      const friendId = members.find(id => id !== auth.currentUser.uid);
+
+      // 检查对方的朋友列表
+      const friendDoc = await getDoc(doc(db, 'users', friendId));
+      if (!friendDoc.exists()) {
+        console.error("Friend doesn't exist:", friendId);
+        return;
+      }
+
+      const friendList = friendDoc.data().friends;
+      const currentUserInFriendList = friendList.find(f => f.id === auth.currentUser.uid);
+
+      // 如果当前用户不在对方的朋友列表中，弹出警告
+      if (!currentUserInFriendList) {
+        Alert.alert(
+          "Friend removed you",
+          "You have been removed from this friend's list. Do you also want to remove this friend?",
+          [
+            {
+              text: "Yes",
+              onPress: async () => {
+                const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+                if (!userDoc.exists()) {
+                  console.error("User doesn't exist:", auth.currentUser.uid);
+                  return;
+                }
+
+                const userFriends = userDoc.data().friends;
+                const updatedFriends = userFriends.filter(friend => friend.id !== friendId);
+                await updateDoc(doc(db, 'users', auth.currentUser.uid), { friends: updatedFriends });
+
+                // Delete the chat from Firebase
+                const chatRef = doc(db, 'chats', chatId);
+                await deleteDoc(chatRef);
+
+                navigation.goBack();
+                }
+            },
+            {
+              text: "No, I want to keep the chat",
+              onPress: () => {
+                setCanSendMessage(false);
+              }
+            }
+          ],
+          { cancelable: false }
+        );
+      }
+    } catch (error) {
+      console.error("Error checking if current user is in friend's list:", error);
+    }
+  };
+
+  useEffect(() => {
+      checkIfInFriendList();
+  }, []);
+
 
 return (
   <SafeAreaView style={styles.SafeAreaView}>
@@ -119,7 +221,12 @@ return (
       data={messages}
       renderItem={({ item }) => (
         <View style={{ padding: 10 }}>
-          <Text style={{ textAlign: 'center', color: 'grey' }}>{formatTimestamp(item.createdAt)}</Text>
+          <View style={{ alignItems: 'center' }}>
+            {formatTimestamp(item.createdAt).date && 
+              <Text style={{ textAlign: 'center', color: 'grey' }}>{formatTimestamp(item.createdAt).date}</Text>
+            }
+            <Text style={{ textAlign: 'center', color: 'grey' }}>{formatTimestamp(item.createdAt).time}</Text>
+          </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             {item.userId !== auth.currentUser.uid && <Text style={{ color: 'grey', fontWeight: 'bold', flex: 1 }}>{friendName}</Text>}
           </View>
@@ -135,16 +242,17 @@ return (
       onContentSizeChange={scrollToBottom}
       onLayout={scrollToBottom}
     />
-
-      <View style={styles.inputContainer}>
-        <TextInput
-          value={input}
-          onChangeText={setInput}
-          style={styles.input}
-          placeholder="Type a message..."
-        />
-        <Button title="Send" onPress={sendMessage} />
-      </View>
+      {canSendMessage && (
+          <View style={styles.inputContainer}>
+            <TextInput
+              value={input}
+              onChangeText={setInput}
+              style={styles.input}
+              placeholder="Type a message..."
+            />
+            <Button title="Send" onPress={sendMessage} />
+          </View>
+        )}
     </KeyboardAvoidingView>
   </SafeAreaView>
 );

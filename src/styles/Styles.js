@@ -102,7 +102,7 @@ export default {
   },
 };
 
-export const chatStyles = StyleSheet.create({
+export const chatsStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f0f0f0',
@@ -194,7 +194,37 @@ export const friendStyles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         flex: 1,
-    }
+    },
+    // Add the styles related to swipeable buttons
+    rowBack: {
+        alignItems: 'center',
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        backgroundColor: '#f0f0f0',
+        width: '100%',
+    },
+    backRightBtn: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'absolute',
+        width: 75,
+        bottom: 1,
+        top: 1,
+    },
+    backRightBtnLeft: {
+        backgroundColor: '#32CD32',
+        right: 75,
+    },
+    backRightBtnRight: {
+        backgroundColor: '#FF3333',
+        right: 0,
+    },
+    backTextWhite: {
+        color: '#FFF',
+        fontWeight: 'bold',
+    },
 });
 
 export const searchStyles = StyleSheet.create({
@@ -236,5 +266,5 @@ export const searchStyles = StyleSheet.create({
   flexDirection: 'row',
   justifyContent: 'space-around',
   margin: 10,
-},
+  },
 });

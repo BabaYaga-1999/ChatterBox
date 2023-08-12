@@ -120,6 +120,7 @@ const SearchScreen = ({ navigation }) => {
             if (message) setMessage('');
           }}
           style={styles.searchInput} 
+          autoCapitalize='none'
         />
       </View>
       <View style={styles.buttonContainer}>

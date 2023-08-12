@@ -3,7 +3,8 @@ import { View, Text, TouchableHighlight, StyleSheet, TouchableOpacity } from 're
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { db, auth } from '../utils/Firebase';
 import { collection, onSnapshot, query, orderBy, doc, deleteDoc, getDoc, updateDoc, where } from 'firebase/firestore';
-import { chatStyles as styles } from '../styles/Styles';
+import { chatsStyles as styles } from '../styles/Styles';
+import { LogBox } from 'react-native';
 
 // Utility function to check if user has deleted the chat
 const hasUserDeletedChat = (deletedBy, uid) => {
@@ -86,6 +87,8 @@ const ChatsScreen = ({ navigation }) => {
     navigation.navigate('Chat', { chatId, friendName });
   };
 
+  LogBox.ignoreAllLogs();
+  
   const deleteChat = async (chatId, rowMap) => {
     const chatRef = doc(db, 'chats', chatId);
     const chatDoc = await getDoc(chatRef);
