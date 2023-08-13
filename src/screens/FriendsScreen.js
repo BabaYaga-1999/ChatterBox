@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableHighlight, Image, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, TouchableHighlight, Image, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { db, auth } from '../utils/Firebase';
-import { collection, addDoc, query, where, getDoc, getDocs, doc, onSnapshot, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDoc, getDocs, doc, onSnapshot, updateDoc, deleteDoc, arrayUnion } from 'firebase/firestore';
 import { friendStyles as styles } from '../styles/Styles';
 import { AntDesign } from '@expo/vector-icons';
 import { SwipeListView } from 'react-native-swipe-list-view';
