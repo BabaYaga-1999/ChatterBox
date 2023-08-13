@@ -6,8 +6,6 @@ import ChatsScreen from '../screens/ChatsScreen';
 import FriendsScreen from '../screens/FriendsScreen';
 import DiscoverScreen from '../screens/DiscoverScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import SearchScreen from '../screens/SearchScreen';
-import ChatScreen from '../screens/ChatScreen';
 import { TouchableOpacity, View, Alert } from 'react-native';
 import Styles from '../styles/Styles';
 import CreatePost from '../screens/CreatePost';
@@ -140,7 +138,7 @@ const TabNavigator = ({ navigation }) => {
         component={ChatsScreen} 
       />
       <Tab.Screen 
-        name="Friends" 
+        name="Friends"
         component={FriendsScreen}
         options={{
           headerRight: () => (
@@ -168,19 +166,11 @@ const TabNavigator = ({ navigation }) => {
         component={DiscoverScreen}
         options={{
           headerRight: () => (
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 15 }}>
-              {friendRequests.length > 0 && (
-              <Ionicons 
-                name="people-circle-outline" 
-                size={24} 
-                color="black" 
-                onPress={() => handleFriendRequest(friendRequests[0])}
-              />
-              )}
-              <TouchableOpacity onPress={() => navigation.navigate('Add Friend')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Create Post')}>
+              <View style={{ marginRight: 15 }}>
                 <Entypo name="plus" size={24} color="black" />
-              </TouchableOpacity>
-            </View>
+              </View>
+            </TouchableOpacity>
           ),
         }}
       />

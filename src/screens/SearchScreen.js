@@ -25,43 +25,6 @@ const SearchScreen = ({ navigation }) => {
     throw new Error('Current user not found in Firestore.');
   };
 
-  const addFriend = async (userDoc) => {
-    try {
-      // add friend to current user's friend list
-      const friendToAdd = {
-        id: userDoc.id,
-        email: userDoc.data().email,
-        name: userDoc.data().name,
-        // ... add other fields if necessary
-      };
-
-      const currentUserRef = doc(db, 'users', auth.currentUser.uid);
-      await updateDoc(currentUserRef, {
-        friends: arrayUnion(friendToAdd)
-      });
-
-      // add current user to friend's friend list
-      const currentUserName = await getCurrentUserName();
-      const currentUserInfo = {
-        id: auth.currentUser.uid,
-        email: auth.currentUser.email,
-        name: currentUserName
-      };
-
-      const userDocRef = doc(db, 'users', userDoc.id);
-      await updateDoc(userDocRef, {
-        friends: arrayUnion(currentUserInfo)
-      });
-
-      setMessage(`Successfully added ${userDoc.data().email} as a friend.`);
-      // Automatically go back to the previous screen
-      navigation.goBack();
-    } catch (error) {
-      console.error("Error updating friend list:", error);
-      setMessage("Failed to add friend. Please try again.");
-    }
-  }
-
   const sendFriendRequest = async (userDoc) => {
     try {
       const friendRequestsRef = collection(db, 'friendRequests');
