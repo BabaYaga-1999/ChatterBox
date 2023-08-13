@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Text, Alert, StyleSheet } from 'react-native';
 import { auth, db } from '../utils/Firebase';
-import { query, where, getDocs, collection, updateDoc, arrayUnion, doc, getDoc } from 'firebase/firestore';
+import { query, where, addDoc, getDocs, collection, updateDoc, arrayUnion, doc, getDoc } from 'firebase/firestore';
 import { searchStyles as styles } from '../styles/Styles'
 import { AntDesign } from '@expo/vector-icons';
 import PressButton from '../components/PressButton';
@@ -62,6 +62,30 @@ const SearchScreen = ({ navigation }) => {
     }
   }
 
+  const sendFriendRequest = async (userDoc) => {
+    try {
+      const friendRequestsRef = collection(db, 'friendRequests');
+      const existingRequestQuery = query(friendRequestsRef, where("from", "==", auth.currentUser.uid), where("to", "==", userDoc.id));
+      const existingRequests = await getDocs(existingRequestQuery);
+
+      if (!existingRequests.empty) {
+        setMessage("You've already sent a friend request. Please wait for a response.");
+        return;
+      }
+
+      await addDoc(friendRequestsRef, {
+        from: auth.currentUser.uid,
+        to: userDoc.id,
+        timestamp: new Date().toISOString()
+      });
+      
+      setMessage(`Friend request sent to ${userDoc.data().email}.`);
+    } catch (error) {
+      console.error("Error sending friend request:", error);
+      setMessage("Failed to send friend request. Please try again.");
+    }
+  }
+
   const searchFriendByEmail = async () => {
     const usersRef = collection(db, 'users');
     const q = query(usersRef, where("email", "==", email));
@@ -94,7 +118,7 @@ const SearchScreen = ({ navigation }) => {
           },
           { 
             text: "Yes", 
-            onPress: () => addFriend(userDoc)
+            onPress: () => sendFriendRequest(userDoc)
           }
         ]
       );
