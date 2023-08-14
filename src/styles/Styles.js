@@ -268,3 +268,68 @@ export const searchStyles = StyleSheet.create({
   margin: 10,
   },
 });
+
+export const loginSignUpStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F6F5F5",
+    alignItems: "stretch",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
+  appTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#552055",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  appDescription: {
+    fontSize: 16,
+    color: "#333",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  input: {
+    borderColor: "#552055",
+    borderWidth: 2,
+    borderRadius: 5,
+    width: "100%",
+    marginVertical: 5,
+    padding: 10,
+  },
+  label: {
+    marginLeft: 5,
+    fontWeight: 'bold',
+    color: "#552055",
+  },
+  buttonContainer: {
+    marginTop: 15,
+    width: '70%',
+    alignSelf: 'center'
+  },
+  primaryButton: {
+    backgroundColor: "#552055",
+    marginVertical: 7,
+    paddingVertical: 8,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  secondaryButton: {
+    backgroundColor: "#ddd",
+    marginVertical: 7,
+    paddingVertical: 8,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  secondaryButtonText: {
+    color: '#333',
+    fontSize: 16,
+  },
+});
