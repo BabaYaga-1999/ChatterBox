@@ -15,9 +15,9 @@ const MainStack = createStackNavigator();
 const MainStackNavigator = () => {
   return (
     <MainStack.Navigator
-    screenOptions={{
-        headerBackTitle: ' ',  // 只显示返回按钮图标
-      }}
+      screenOptions={{
+          headerBackTitle: ' ',
+        }}
     >
       <MainStack.Screen 
         name="HomeTabs" 
