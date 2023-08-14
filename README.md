@@ -11,7 +11,7 @@ There are three primary collections:
 - posts
 - users
 
-1. Detailed Description:
+2. Detailed Description:
 
   i. chats:
 
@@ -32,7 +32,7 @@ There are three primary collections:
     - lastMessage: The last message exchanged in this chat room.
     - lastMessageTime: Timestamp indicating when the last message was sent.
     - members: A list containing the IDs of the two users in the chat.
-    - pinned: A boolean indicating if the chat has been pinned or not.
+    - pinnedUsers: A containing the IDs of the users who pinned the chat.
 
  ii. posts:
 
@@ -51,7 +51,7 @@ There are three primary collections:
   - name: The name of the user.
   - Future enhancements may include fields like avatar, preferences, etc.
 
- 3. Relationships:
+3. Relationships:
 
 1. Each user can be a part of multiple chat sessions in the chats collection.
 2. Each user can have multiple posts in the posts collection.
@@ -63,6 +63,7 @@ This data model allows for efficient querying and retrieval of chat sessions, in
 
 
 
-Installation:
+Installations:
 npm install --save react-native-swipeout   
 npm install --save react-native-swipe-list-view
+

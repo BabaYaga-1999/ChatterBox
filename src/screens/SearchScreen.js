@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text, Alert } from 'react-native';
+import { View, TextInput, Button, Text, Alert, StyleSheet } from 'react-native';
 import { auth, db } from '../utils/Firebase';
-import { query, where, getDocs, collection, updateDoc, arrayUnion, doc, getDoc } from 'firebase/firestore';
+import { query, where, addDoc, getDocs, collection, updateDoc, arrayUnion, doc, getDoc } from 'firebase/firestore';
+import { searchStyles as styles } from '../styles/Styles'
+import { AntDesign } from '@expo/vector-icons';
+import PressButton from '../components/PressButton';
 
 const SearchScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -22,40 +25,27 @@ const SearchScreen = ({ navigation }) => {
     throw new Error('Current user not found in Firestore.');
   };
 
-  const addFriend = async (userDoc) => {
+  const sendFriendRequest = async (userDoc) => {
     try {
-      // add friend to current user's friend list
-      const friendToAdd = {
-        id: userDoc.id,
-        email: userDoc.data().email,
-        name: userDoc.data().name,
-        // ... add other fields if necessary
-      };
+      const friendRequestsRef = collection(db, 'friendRequests');
+      const existingRequestQuery = query(friendRequestsRef, where("from", "==", auth.currentUser.uid), where("to", "==", userDoc.id));
+      const existingRequests = await getDocs(existingRequestQuery);
 
-      const currentUserRef = doc(db, 'users', auth.currentUser.uid);
-      await updateDoc(currentUserRef, {
-        friends: arrayUnion(friendToAdd)
+      if (!existingRequests.empty) {
+        setMessage("You've already sent a friend request. Please wait for a response.");
+        return;
+      }
+
+      await addDoc(friendRequestsRef, {
+        from: auth.currentUser.uid,
+        to: userDoc.id,
+        timestamp: new Date().toISOString()
       });
-
-      // add current user to friend's friend list
-      const currentUserName = await getCurrentUserName();
-      const currentUserInfo = {
-        id: auth.currentUser.uid,
-        email: auth.currentUser.email,
-        name: currentUserName
-      };
-
-      const userDocRef = doc(db, 'users', userDoc.id);
-      await updateDoc(userDocRef, {
-        friends: arrayUnion(currentUserInfo)
-      });
-
-      setMessage(`Successfully added ${userDoc.data().email} as a friend.`);
-      // Automatically go back to the previous screen
-      navigation.goBack();
+      
+      setMessage(`Friend request sent to ${userDoc.data().email}.`);
     } catch (error) {
-      console.error("Error updating friend list:", error);
-      setMessage("Failed to add friend. Please try again.");
+      console.error("Error sending friend request:", error);
+      setMessage("Failed to send friend request. Please try again.");
     }
   }
 
@@ -88,11 +78,10 @@ const SearchScreen = ({ navigation }) => {
         [
           {
             text: "Cancel",
-            style: "cancel"
           },
           { 
             text: "Yes", 
-            onPress: () => addFriend(userDoc)
+            onPress: () => sendFriendRequest(userDoc)
           }
         ]
       );
@@ -101,15 +90,31 @@ const SearchScreen = ({ navigation }) => {
     }
   };
 
+  const resetSearch = () => {
+    setEmail('');  // clear input
+  }
+
   return (
-    <View>
-      <TextInput 
-        placeholder="Enter User Email" 
-        value={email} 
-        onChangeText={setEmail} 
-      />
-      <Button title="Search" onPress={searchFriendByEmail} />
-      <Text>{message}</Text>
+    <View style={styles.container}>
+      <View style={styles.searchContainer}>
+        <AntDesign name="search1" size={20} color="#aaa" style={styles.searchIcon} />
+        <TextInput 
+          placeholder="Enter User Email"
+          placeholderTextColor="#aaa" 
+          value={email} 
+          onChangeText={(text) => {
+            setEmail(text);
+            if (message) setMessage('');
+          }}
+          style={styles.searchInput} 
+          autoCapitalize='none'
+        />
+      </View>
+      <View style={styles.buttonContainer}>
+        <PressButton text="Reset" handlePress={resetSearch} width="30%" />
+        <PressButton text="Search" handlePress={searchFriendByEmail} width="30%" />
+      </View>
+      <Text style={styles.messageText}>{message}</Text>
     </View>
   );
 };

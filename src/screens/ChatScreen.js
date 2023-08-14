@@ -1,22 +1,57 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, FlatList } from 'react-native';
-import { collection, addDoc, onSnapshot, updateDoc, doc, getDoc, getDocs } from 'firebase/firestore';
+import React, { useRef, useState, useEffect } from 'react';
+import { View, Text, TextInput, Button, FlatList, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../utils/Firebase';
+import { SafeAreaView } from 'react-native';
 
 const ChatScreen = ({ route, navigation }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [userDeletionTimestamp, setUserDeletionTimestamp] = useState(null);
-
+  const [canSendMessage, setCanSendMessage] = useState(true);
+  const flatListRef = useRef(null);
   const { chatId, friendName } = route.params;
 
   useEffect(() => {
-    // Set the friend's name as the header title when the component mounts
+    let unsubscribe = null;
+
+    const checkFriendshipStatus = async () => {
+        const chatDoc = await getDoc(doc(db, 'chats', chatId));
+        const members = chatDoc.data().members;
+        const friendId = members.find(id => id !== auth.currentUser.uid);
+
+        const friendRef = doc(db, 'users', friendId);
+        unsubscribe = onSnapshot(friendRef, (friendDoc) => {
+            if (!friendDoc.exists()) {
+                console.error("Friend doesn't exist:", friendId);
+                return;
+            }
+
+            const friendList = friendDoc.data().friends || [];
+            const currentUserInFriendList = friendList.find(f => f.id === auth.currentUser.uid);
+
+            if (!currentUserInFriendList) {
+                setCanSendMessage(false);
+            } else {
+                setCanSendMessage(true);
+            }
+        });
+    };
+
+    checkFriendshipStatus();
+    
+    return () => {
+        if (unsubscribe) {
+            unsubscribe();
+        }
+    };
+  }, [chatId]);
+
+  useEffect(() => {
     navigation.setOptions({ title: friendName });
   }, [friendName, navigation]);
 
   useEffect(() => {
-    // Fetch the chat document to get the deletedBy data for the current user
     const fetchChatDeletionTimestamp = async () => {
       const chatRef = doc(db, 'chats', chatId);
       const chatDoc = await getDoc(chatRef);
@@ -26,25 +61,20 @@ const ChatScreen = ({ route, navigation }) => {
         setUserDeletionTimestamp(currentUserDeletion.timestamp);
       }
     };
-
     fetchChatDeletionTimestamp();
   }, [chatId]);
 
   useEffect(() => {
-    // Fetch messages from the database
     const unsubscribe = onSnapshot(collection(db, 'chats', chatId, 'messages'), (snapshot) => {
       let fetchedMessages = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-      
-      // Filter messages that were sent before the user deleted the chat
       if (userDeletionTimestamp) {
-          fetchedMessages = fetchedMessages.filter(message => 
-              new Date(message.createdAt).getTime() > userDeletionTimestamp
-          );
+        fetchedMessages = fetchedMessages.filter(message => 
+          new Date(message.createdAt).getTime() > userDeletionTimestamp
+        );
       }
-
-      setMessages(fetchedMessages.reverse());
+      fetchedMessages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      setMessages(fetchedMessages);
     });
-
     return () => unsubscribe();
   }, [chatId, userDeletionTimestamp]);
 
@@ -84,32 +114,193 @@ const ChatScreen = ({ route, navigation }) => {
       }
   };
 
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
+    const today = new Date();
 
-  return (
-    <View style={{ flex: 1 }}>
-      <View style={{ flex: 1 }}>
-        <FlatList
-          data={messages}
-          renderItem={({ item }) => (
-            <View style={{ flexDirection: 'row' }}>
-              <Text>{item.text}</Text>
-            </View>
-          )}
-          keyExtractor={(item) => item.id}
-        />
-      </View>
+    const timeString = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', margin: 10 }}>
-        <TextInput
-          value={input}
-          onChangeText={setInput}
-          style={{ flex: 1, borderColor: 'gray', borderWidth: 1, borderRadius: 5 }}
-          placeholder="Type a message..."
-        />
-        <Button title="Send" onPress={sendMessage} />
-      </View>
-    </View>
-  );
+    // If the message was sent today, only return the time
+    if (date.toDateString() === today.toDateString()) {
+      return { time: timeString };
+    }
+
+    // If the message was sent before today, return the date and time
+    const dateString = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return {
+      date: dateString,
+      time: timeString
+    };
+  };
+
+  // Scroll to the bottom of the FlatList when a new message is sent
+  const scrollToBottom = () => {
+    if (messages.length > 0) {
+        flatListRef.current.scrollToEnd({ animated: true });
+    }
+  };
+
+  const checkIfInFriendList = async () => {
+    try {
+      // 获取当前聊天的成员
+      const chatDoc = await getDoc(doc(db, 'chats', chatId));
+      if (!chatDoc.exists()) {
+        console.error("Chat doesn't exist:", chatId);
+        return;
+      }
+
+      const members = chatDoc.data().members;
+      // 获取对方的ID
+      const friendId = members.find(id => id !== auth.currentUser.uid);
+
+      // 检查对方的朋友列表
+      const friendDoc = await getDoc(doc(db, 'users', friendId));
+      if (!friendDoc.exists()) {
+        console.error("Friend doesn't exist:", friendId);
+        return;
+      }
+
+      const friendList = friendDoc.data().friends;
+      const currentUserInFriendList = friendList.find(f => f.id === auth.currentUser.uid);
+
+      // 如果当前用户不在对方的朋友列表中，弹出警告
+      if (!currentUserInFriendList) {
+        Alert.alert(
+          "Friend removed you",
+          "You have been removed from this friend's list. Do you also want to remove this friend?",
+          [
+            {
+              text: "Yes",
+              onPress: async () => {
+                const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+                if (!userDoc.exists()) {
+                  console.error("User doesn't exist:", auth.currentUser.uid);
+                  return;
+                }
+
+                const userFriends = userDoc.data().friends;
+                const updatedFriends = userFriends.filter(friend => friend.id !== friendId);
+                await updateDoc(doc(db, 'users', auth.currentUser.uid), { friends: updatedFriends });
+
+                // Delete the chat from Firebase
+                const chatRef = doc(db, 'chats', chatId);
+                await deleteDoc(chatRef);
+
+                navigation.goBack();
+                }
+            },
+            {
+              text: "No, I want to keep the chat",
+              onPress: () => {
+                setCanSendMessage(false);
+              }
+            }
+          ],
+          { cancelable: false }
+        );
+      }
+    } catch (error) {
+      console.error("Error checking if current user is in friend's list:", error);
+    }
+  };
+
+  useEffect(() => {
+      checkIfInFriendList();
+  }, []);
+
+
+return (
+  <SafeAreaView style={styles.SafeAreaView}>
+    <KeyboardAvoidingView
+    style={styles.container}
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+    keyboardVerticalOffset={Platform.OS === "ios" ? 95 : 95}
+  >
+    <FlatList
+      ref={flatListRef}
+      data={messages}
+      renderItem={({ item }) => (
+        <View style={{ padding: 10 }}>
+          <View style={{ alignItems: 'center' }}>
+            {formatTimestamp(item.createdAt).date && 
+              <Text style={{ textAlign: 'center', color: 'grey' }}>{formatTimestamp(item.createdAt).date}</Text>
+            }
+            <Text style={{ textAlign: 'center', color: 'grey' }}>{formatTimestamp(item.createdAt).time}</Text>
+          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            {item.userId !== auth.currentUser.uid && <Text style={{ color: 'grey', fontWeight: 'bold', flex: 1 }}>{friendName}</Text>}
+          </View>
+          <View style={[
+            styles.messageBox,
+            item.userId === auth.currentUser.uid ? styles.rightMsg : styles.leftMsg
+          ]}>
+            <Text style={styles.messageText}>{item.text}</Text>
+          </View>
+        </View>
+      )}
+      keyExtractor={(item) => item.id}
+      onContentSizeChange={scrollToBottom}
+      onLayout={scrollToBottom}
+    />
+      {canSendMessage && (
+          <View style={styles.inputContainer}>
+            <TextInput
+              value={input}
+              onChangeText={setInput}
+              style={styles.input}
+              placeholder="Type a message..."
+            />
+            <Button title="Send" onPress={sendMessage} />
+          </View>
+        )}
+    </KeyboardAvoidingView>
+  </SafeAreaView>
+);
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'space-between',
+    backgroundColor: 'white'
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    margin: 10,
+    marginBottom: 5,
+  },
+  input: {
+    flex: 1,
+    borderColor: 'gray',
+    borderWidth: 1,
+    borderRadius: 5,
+    marginRight: 10,
+    padding: 10,
+  },
+  messageBox: {
+    padding: 10,
+    borderRadius: 10,
+    margin: 5,
+    maxWidth: '75%',
+  },
+  leftMsg: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFD1DC',
+    flex: 2
+  },
+  rightMsg: {
+    alignSelf: 'flex-end',
+    backgroundColor: '#A8E6CF',
+    flex: 2  // Adjust flex for message alignment
+  },
+  messageText: {
+    fontSize: 16,
+  },
+  SafeAreaView: {
+    flex: 1,
+    backgroundColor: 'white'
+  }
+});
 
 export default ChatScreen;

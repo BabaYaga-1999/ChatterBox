@@ -3,25 +3,52 @@ import { createStackNavigator } from '@react-navigation/stack';
 import TabNavigator from './TabNavigator';
 import LoginScreen from '../screens/LoginScreen';
 import SignupScreen from '../screens/SignupScreen';
-import ChatsScreen from '../screens/ChatsScreen';
-import Chatcreen from '../screens/ChatScreen';
+import ChatScreen from '../screens/ChatScreen';
+import SearchScreen from '../screens/SearchScreen';
+import CreatePost from '../screens/CreatePost';
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../utils/Firebase";
 
 const Stack = createStackNavigator();
+const MainStack = createStackNavigator();
+
+const MainStackNavigator = () => {
+  return (
+    <MainStack.Navigator
+      screenOptions={{
+          headerBackTitle: ' ',
+        }}
+    >
+      <MainStack.Screen 
+        name="HomeTabs" 
+        component={TabNavigator} 
+        options={{ headerShown: false }}
+      />
+      <MainStack.Screen 
+        name="Chat" 
+        component={ChatScreen} 
+      />
+      <MainStack.Screen 
+        name="Add Friend" 
+        component={SearchScreen} 
+      />
+      <MainStack.Screen 
+        name="Create Post" 
+        component={CreatePost}
+      />
+    </MainStack.Navigator>
+  );
+};
 
 const AppNavigator = () => {
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState(null);
 
-  // trigger when auth state changes
   useEffect(() => {
     const subscriber = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (initializing) setInitializing(false);
     });
-
-    // Unsubscribe on cleanup
     return subscriber;
   }, [initializing]);
 
@@ -33,31 +60,29 @@ const AppNavigator = () => {
     <Stack.Navigator
       screenOptions={{
         headerTitleAlign: 'center',
+        headerBackTitle: ' ',
       }}
-  >
-    {!user ? (
-      <>
-        <Stack.Screen 
-          name="Login" 
-          component={LoginScreen}
-          options={{ title: 'Login/SignUp' }}
-        />
-        <Stack.Screen 
-          name="Signup" 
-          component={SignupScreen}
-          options={{ title: 'SignUp' }}
-        />
-      </>
-    ) : (
-      <>
+    >
+      {!user ? (
+        <>
+          <Stack.Screen 
+            name="Login" 
+            component={LoginScreen}
+            options={{ title: 'Login/SignUp' }}
+          />
+          <Stack.Screen 
+            name="Signup" 
+            component={SignupScreen}
+            options={{ title: 'SignUp' }}
+          />
+        </>
+      ) : (
         <Stack.Screen 
           name="Home" 
-          component={TabNavigator} 
+          component={MainStackNavigator} 
           options={{ headerShown: false }}
         />
-        {/* <Stack.Screen name="ChatsScreen" component={ChatsScreen} /> */}
-      </>
-    )}
+      )}
     </Stack.Navigator>
   );
 };

@@ -3,6 +3,8 @@ import { View, Text, TouchableHighlight, StyleSheet, TouchableOpacity } from 're
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { db, auth } from '../utils/Firebase';
 import { collection, onSnapshot, query, orderBy, doc, deleteDoc, getDoc, updateDoc, where } from 'firebase/firestore';
+import { chatsStyles as styles } from '../styles/Styles';
+import { LogBox } from 'react-native';
 
 // Utility function to check if user has deleted the chat
 const hasUserDeletedChat = (deletedBy, uid) => {
@@ -37,7 +39,6 @@ const ChatsScreen = ({ navigation }) => {
     const chatQuery = query(
       collection(db, 'chats'),
       where('members', 'array-contains', currentUserId),
-      orderBy('pinned', 'desc'),
       orderBy('lastMessageTime', 'desc')
     );
 
@@ -63,8 +64,21 @@ const ChatsScreen = ({ navigation }) => {
         return false;
       });
 
-      setChats(visibleChats);
-      fetchUserNames(visibleChats);
+      const pinnedChats = visibleChats.filter(chat => chat.pinnedUsers.some(p => p.uid === currentUserId));
+      const unpinnedChats = visibleChats.filter(chat => !chat.pinnedUsers.some(p => p.uid === currentUserId));
+
+      // Sort each list based on lastMessageTime
+      pinnedChats.sort((a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime));
+      unpinnedChats.sort((a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime));
+
+      // Combine the two lists
+      const allChats = [...pinnedChats, ...unpinnedChats];
+
+      setChats(allChats);
+      fetchUserNames(allChats);
+
+      // setChats(visibleChats);
+      // fetchUserNames(visibleChats);
     });
     return () => unsubscribe();
   }, []);
@@ -73,6 +87,8 @@ const ChatsScreen = ({ navigation }) => {
     navigation.navigate('Chat', { chatId, friendName });
   };
 
+  LogBox.ignoreAllLogs();
+  
   const deleteChat = async (chatId, rowMap) => {
     const chatRef = doc(db, 'chats', chatId);
     const chatDoc = await getDoc(chatRef);
@@ -126,8 +142,18 @@ const ChatsScreen = ({ navigation }) => {
   };
 
   const togglePinChat = async (chat, rowMap) => {
-    const pinned = !chat.pinned;
-    await updateDoc(doc(db, 'chats', chat.id), { pinned });
+    const userPinned = chat.pinnedUsers.some(p => p.uid === auth.currentUser.uid);
+    let updatedPinnedUsers = [...chat.pinnedUsers];
+
+    if (userPinned) {
+        // Unpin: Remove user from the array
+        updatedPinnedUsers = updatedPinnedUsers.filter(p => p.uid !== auth.currentUser.uid);
+    } else {
+        // Pin: Add user to the array
+        updatedPinnedUsers.push({ uid: auth.currentUser.uid });
+    }
+
+    await updateDoc(doc(db, 'chats', chat.id), { pinnedUsers: updatedPinnedUsers });
 
     // Close the open SwipeListView item
     if (rowMap[chat.id] && rowMap[chat.id].closeRow) {
@@ -181,12 +207,12 @@ const ChatsScreen = ({ navigation }) => {
             style={[
                 styles.backRightBtn,
                 styles.backRightBtnLeft,
-                { backgroundColor: data.item.pinned ? '#1E90FF' : '#32CD32' }  // change color based on pinned status
+                { backgroundColor: data.item.pinnedUsers.some(p => p.uid === auth.currentUser.uid) ? '#1E90FF' : '#32CD32' }  // change color based on pinned status
             ]}
             onPress={() => togglePinChat(data.item, rowMap)}
         >
             <Text style={styles.backTextWhite}>
-                {data.item.pinned ? 'Unpin' : 'Pin'}
+                {data.item.pinnedUsers.some(p => p.uid === auth.currentUser.uid) ? 'Unpin' : 'Pin'}
             </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -213,53 +239,5 @@ const ChatsScreen = ({ navigation }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f0f0f0',
-  },
-  listViewContent: {
-    width: '100%',
-  },
-  chatItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    backgroundColor: '#fff',
-    width: '100%',
-  },
-  rowBack: {
-    alignItems: 'center',
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    backgroundColor: '#f0f0f0',
-    width: '100%',
-  },
-  backRightBtn: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'absolute',
-    width: 75,
-    bottom: 1,
-    top: 1,
-  },
-  backRightBtnLeft: {
-    backgroundColor: '#32CD32',
-    right: 75,
-  },
-  backRightBtnRight: {
-    backgroundColor: '#FF3333',
-    right: 0,
-  },
-  backTextWhite: {
-    color: '#FFF',
-    fontWeight: 'bold',
-  },
-});
 
 export default ChatsScreen;

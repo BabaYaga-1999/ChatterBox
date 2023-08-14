@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image, TextInput } from 'react-native';
+import { View, Text, FlatList, TouchableHighlight, Image, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { db, auth } from '../utils/Firebase';
-import { collection, addDoc, query, where, getDocs, doc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDoc, getDocs, doc, onSnapshot, updateDoc, deleteDoc, arrayUnion } from 'firebase/firestore';
+import { friendStyles as styles } from '../styles/Styles';
+import { AntDesign } from '@expo/vector-icons';
+import { SwipeListView } from 'react-native-swipe-list-view';
 
 const FriendsScreen = ({ navigation }) => {
   const [friends, setFriends] = useState([]);
@@ -22,6 +25,7 @@ const FriendsScreen = ({ navigation }) => {
   }, []);
 
   const filteredFriends = friends.filter(friend => friend.name.toLowerCase().includes(searchText.toLowerCase()));
+  const sortedFriends = filteredFriends.sort((a, b) => a.name.localeCompare(b.name));
 
   const startChat = async (friend) => {
     const currentUserId = auth.currentUser.uid;
@@ -48,7 +52,7 @@ const FriendsScreen = ({ navigation }) => {
         members: [currentUserId, friend.id],
         lastMessage: '',
         lastMessageTime: new Date().toISOString(),
-        pinned: false,  // default value for pinned
+        pinnedUsers: [],  // keeping track of users who pinned the chat
         deletedBy: []
       };
       const newChatDocRef = await addDoc(chatsRef, newChatData);
@@ -58,26 +62,120 @@ const FriendsScreen = ({ navigation }) => {
     }
   };
 
+  const deleteFriend = async (friendId, rowMap) => {
+    try {
+      const currentUserDoc = doc(db, 'users', auth.currentUser.uid);
+      const currentUserData = await getDoc(currentUserDoc);
+
+      if (currentUserData.exists()) {
+        const currentFriends = currentUserData.data().friends;
+        const updatedFriends = currentFriends.filter(friend => friend.id !== friendId);
+        await updateDoc(currentUserDoc, { friends: updatedFriends });
+
+        // Fetch all chats associated with the current user
+        const currentUserId = auth.currentUser.uid;
+        const chatQuery = query(
+          collection(db, 'chats'),
+          where('members', 'array-contains', currentUserId)
+        );
+
+        const chatSnapshot = await getDocs(chatQuery);
+        
+        chatSnapshot.docs.forEach(async (chatDoc) => {
+          if (chatDoc.exists) {
+            const chatData = chatDoc.data();
+
+            // Check if both the friend and the user are members of this chat
+            if (chatData.members.includes(friendId)) {
+              let updatedDeletedBy = [...chatData.deletedBy];
+              const currentUserDeletionIndex = updatedDeletedBy.findIndex(user => user.uid === currentUserId);
+
+              const currentUserDeletionInfo = {
+                uid: currentUserId,
+                timestamp: Date.now(),
+                active: true,
+              };
+
+              // Update or add the current user's deletion info
+              if (currentUserDeletionIndex === -1) {
+                // User not in deletedBy, add them
+                updatedDeletedBy.push(currentUserDeletionInfo);
+              } else {
+                // User already in deletedBy, update their timestamp
+                updatedDeletedBy[currentUserDeletionIndex] = currentUserDeletionInfo;
+              }
+
+              await updateDoc(doc(db, 'chats', chatDoc.id), {
+                deletedBy: updatedDeletedBy
+              });
+
+              // Check if all members have deleted the chat and their status is active
+              const allMembersDeleted = chatData.members.every(memberId => {
+                const userDeletionInfo = updatedDeletedBy.find(user => user.uid === memberId);
+                return userDeletionInfo && userDeletionInfo.active;
+              });
+
+              // If all members have deleted the chat, delete the chat document in Firebase
+              if (allMembersDeleted) {
+                await deleteDoc(doc(db, 'chats', chatDoc.id));
+              }
+            }
+          }
+        });
+      }
+
+      if (rowMap[friendId] && rowMap[friendId].closeRow) {
+        rowMap[friendId].closeRow();
+      }
+    } catch (error) {
+      console.error("Failed to delete friend:", error);
+    }
+  };
+
   const renderItem = ({ item }) => (
-    <TouchableOpacity onPress={() => startChat(item)}>
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <Image source={{ uri: item.avatar }} style={{ width: 50, height: 50, borderRadius: 25 }} />
-        <Text>{item.name}</Text>
+    <TouchableHighlight
+      underlayColor={'#f0f0f0'}
+      onPress={() => startChat(item)}
+      style={styles.listItem}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+          <Image source={{ uri: item.avatar }} style={styles.avatar} />
+          <Text style={styles.friendName}>{item.name}</Text>
       </View>
-    </TouchableOpacity>
+    </TouchableHighlight>
+    );
+
+  const renderHiddenItem = (data, rowMap) => (
+    <View style={styles.rowBack}>
+      <TouchableOpacity
+          style={[styles.backRightBtn, styles.backRightBtnRight]}
+          onPress={() => deleteFriend(data.item.id, rowMap)}
+      >
+          <Text style={styles.backTextWhite}>Delete</Text>
+      </TouchableOpacity>
+    </View>
   );
 
   return (
-    <View>
-      {/* <TextInput
-        placeholder="Search for friends..."
-        value={searchText}
-        onChangeText={setSearchText}
-      /> */}
-      <FlatList
-        data={filteredFriends}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
+    <View style={styles.container}>
+      <View style={styles.searchContainer}>
+          <AntDesign name="search1" size={20} color="#aaa" style={styles.searchIcon} />
+          <TextInput
+              placeholder="Search"
+              placeholderTextColor="#aaa" 
+              value={searchText}
+              onChangeText={setSearchText}
+              style={styles.searchInput}
+              autoCapitalize='none'
+          />
+      </View>
+      <SwipeListView
+          data={sortedFriends}
+          renderItem={renderItem}
+          renderHiddenItem={renderHiddenItem}
+          rightOpenValue={-75}
+          keyExtractor={item => item.id}
+          disableRightSwipe
       />
     </View>
   );
