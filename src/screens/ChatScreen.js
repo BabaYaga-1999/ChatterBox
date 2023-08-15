@@ -3,6 +3,7 @@ import { View, Text, TextInput, Button, FlatList, StyleSheet, KeyboardAvoidingVi
 import { collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../utils/Firebase';
 import { SafeAreaView } from 'react-native';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 const ChatScreen = ({ route, navigation }) => {
   const [messages, setMessages] = useState([]);
@@ -219,40 +220,70 @@ return (
     <FlatList
       ref={flatListRef}
       data={messages}
-      renderItem={({ item }) => (
-        <View style={{ padding: 10 }}>
-          <View style={{ alignItems: 'center' }}>
-            {formatTimestamp(item.createdAt).date && 
-              <Text style={{ textAlign: 'center', color: 'grey' }}>{formatTimestamp(item.createdAt).date}</Text>
-            }
-            <Text style={{ textAlign: 'center', color: 'grey' }}>{formatTimestamp(item.createdAt).time}</Text>
+      renderItem={({ item, index }) => {
+        let showDate = true;
+        let showTime = true;
+        let showName = true;
+
+        if (index > 0) {
+          const prevMessage = messages[index - 1];
+
+          const diffInMinutes = (new Date(item.createdAt) - new Date(prevMessage.createdAt)) / (60 * 1000); // difference in minutes
+          if (diffInMinutes < 1) {
+            showTime = false;
+          }
+
+          if (item.userId === prevMessage.userId) {
+            showName = false;
+          }
+        }
+
+        const timestampFormat = formatTimestamp(item.createdAt);
+        
+        return (
+          <View style={{ padding: 10, paddingTop: showName ? 10 : 0 }}>
+            <View style={{ alignItems: 'center' }}>
+              {showDate && timestampFormat.date && 
+                <Text style={{ textAlign: 'center', color: 'grey' }}>{timestampFormat.date}</Text>
+              }
+              {showTime && 
+                <Text style={{ textAlign: 'center', color: 'grey' }}>{timestampFormat.time}</Text>
+              }
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              {showName && item.userId !== auth.currentUser.uid && <Text style={{ color: 'grey', fontWeight: 'bold', flex: 1, paddingLeft: 5 }}>{friendName}</Text>}
+            </View>
+            <View style={[
+              styles.messageBox,
+              item.userId === auth.currentUser.uid ? styles.rightMsg : styles.leftMsg
+            ]}>
+              <Text style={styles.messageText}>{item.text}</Text>
+            </View>
           </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            {item.userId !== auth.currentUser.uid && <Text style={{ color: 'grey', fontWeight: 'bold', flex: 1 }}>{friendName}</Text>}
-          </View>
-          <View style={[
-            styles.messageBox,
-            item.userId === auth.currentUser.uid ? styles.rightMsg : styles.leftMsg
-          ]}>
-            <Text style={styles.messageText}>{item.text}</Text>
-          </View>
-        </View>
-      )}
+        );
+      }}
+
       keyExtractor={(item) => item.id}
       onContentSizeChange={scrollToBottom}
       onLayout={scrollToBottom}
     />
-      {canSendMessage && (
-          <View style={styles.inputContainer}>
+      <View style={styles.inputContainer}>
+        <View style={styles.textInputWrapper}>
             <TextInput
-              value={input}
-              onChangeText={setInput}
-              style={styles.input}
-              placeholder="Type a message..."
+                value={input}
+                onChangeText={setInput}
+                style={styles.input}
+                placeholder="Type a message..."
             />
-            <Button title="Send" onPress={sendMessage} />
-          </View>
+            {input.trim() !== "" && canSendMessage && (
+                <MaterialCommunityIcons name="send-circle-outline" size={28} color="black" onPress={sendMessage} style={styles.insideIcon} />
+            )}
+        </View>
+        {canSendMessage && (
+            <MaterialIcons name="add-circle-outline" size={28} color="black" />
         )}
+    </View>
+
     </KeyboardAvoidingView>
   </SafeAreaView>
 );
@@ -269,17 +300,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: 10,
     marginBottom: 5,
+    justifyContent: 'space-between',
   },
-  input: {
+  textInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
     borderColor: 'gray',
     borderWidth: 1,
     borderRadius: 5,
     marginRight: 10,
+  },
+  input: {
+    flex: 1,
     padding: 10,
+    paddingLeft: 15,
+    paddingRight: 35,
+  },
+  insideIcon: {
+    position: 'absolute',
+    right: 10,
   },
   messageBox: {
-    padding: 10,
+    padding: 12,
     borderRadius: 10,
     margin: 5,
     maxWidth: '75%',
