@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, FlatList, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, TextInput, Button, FlatList, StyleSheet, KeyboardAvoidingView, Platform, Alert, TouchableOpacity } from 'react-native';
 import { collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../utils/Firebase';
 import { SafeAreaView } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons, FontAwesome, Entypo } from '@expo/vector-icons';
 
 const ChatScreen = ({ route, navigation }) => {
   const [messages, setMessages] = useState([]);
@@ -12,6 +12,7 @@ const ChatScreen = ({ route, navigation }) => {
   const [canSendMessage, setCanSendMessage] = useState(true);
   const flatListRef = useRef(null);
   const { chatId, friendName } = route.params;
+  const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
 
   useEffect(() => {
     let unsubscribe = null;
@@ -209,6 +210,37 @@ const ChatScreen = ({ route, navigation }) => {
       checkIfInFriendList();
   }, []);
 
+  const handlePhotoOption = () => {
+        // TODO: Implement function to handle the photo option
+        console.log("Send photo");
+    }
+
+    const handleCameraOption = () => {
+        // TODO: Implement function to handle the camera option
+        console.log("Take a photo");
+    }
+
+    const handleLocationOption = () => {
+        // TODO: Implement function to send the user's location
+        console.log("Send location");
+    }
+
+    const renderAttachmentOptions = () => (
+      <View style={styles.attachmentOptionsContainer}>
+        <TouchableOpacity style={styles.attachmentOption} onPress={handlePhotoOption}>
+          <FontAwesome name="photo" size={24} color="black" />
+          <Text>Photo</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.attachmentOption} onPress={handleCameraOption}>
+          <Entypo name="camera" size={24} color="black" />
+          <Text>Camera</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.attachmentOption} onPress={handleLocationOption}>
+          <Entypo name="location" size={24} color="black" />
+          <Text>Location</Text>
+        </TouchableOpacity>
+      </View>
+    );
 
 return (
   <SafeAreaView style={styles.SafeAreaView}>
@@ -280,10 +312,16 @@ return (
             )}
         </View>
         {canSendMessage && (
-            <MaterialIcons name="add-circle-outline" size={28} color="black" />
+            <MaterialIcons 
+                name="add-circle-outline" 
+                size={28} 
+                color="black" 
+                onPress={() => setShowAttachmentOptions(!showAttachmentOptions)}
+            />
         )}
+        
     </View>
-
+    {showAttachmentOptions && renderAttachmentOptions()}
     </KeyboardAvoidingView>
   </SafeAreaView>
 );
@@ -298,9 +336,11 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    margin: 10,
-    marginBottom: 5,
-    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderTopWidth: 0.3,
+    borderColor: '#d1d1d1',
+    backgroundColor: 'white',
   },
   textInputWrapper: {
     flexDirection: 'row',
@@ -308,14 +348,16 @@ const styles = StyleSheet.create({
     flex: 1,
     borderColor: 'gray',
     borderWidth: 1,
-    borderRadius: 5,
+    borderRadius: 10,
     marginRight: 10,
+    paddingHorizontal: 10
   },
   input: {
     flex: 1,
     padding: 10,
     paddingLeft: 15,
     paddingRight: 35,
+    borderRadius: 20
   },
   insideIcon: {
     position: 'absolute',
@@ -343,7 +385,24 @@ const styles = StyleSheet.create({
   SafeAreaView: {
     flex: 1,
     backgroundColor: 'white'
-  }
+  },
+  attachmentOptionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    backgroundColor: 'white',
+    paddingVertical: 10,
+    borderTopWidth: 0.3, 
+    borderColor: '#d1d1d1',
+  }, 
+  attachmentOption: {
+    alignItems: 'center',
+    padding: 7,
+    backgroundColor: 'rgba(230,230,230,0.6)',
+    borderRadius: 10,
+    width: '17%',  // Ensures all attachment options have the same width
+    justifyContent: 'center'
+  },
+
 });
 
 export default ChatScreen;
