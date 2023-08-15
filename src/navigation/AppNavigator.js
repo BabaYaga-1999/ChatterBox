@@ -35,6 +35,7 @@ const MainStackNavigator = () => {
       <MainStack.Screen 
         name="Create Post" 
         component={CreatePost}
+        options={{headerBackTitleStyle:{color:"black"}}}
       />
     </MainStack.Navigator>
   );

@@ -333,3 +333,18 @@ export const loginSignUpStyles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
+export const mapStyle = StyleSheet.create({
+  button:{
+    backgroundColor:"white",
+    borderRadius:100, 
+    shadowColor:"black", 
+    shadowOpacity:10, 
+    elevation:5
+  },
+  buttonWrapper:{
+    position: 'absolute', 
+    top: '70%', 
+    left:"85%"
+  }
+})
