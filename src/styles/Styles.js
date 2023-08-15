@@ -334,7 +334,7 @@ export const loginSignUpStyles = StyleSheet.create({
   },
 });
 
-export const mapStyle = StyleSheet.create({
+export const discoverStyle = StyleSheet.create({
   button:{
     backgroundColor:"white",
     borderRadius:100, 
@@ -346,5 +346,17 @@ export const mapStyle = StyleSheet.create({
     position: 'absolute', 
     top: '70%', 
     left:"85%"
-  }
+  },
+  container: {
+    flex: 1,
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  centerButtonWrapper:{
+    position: 'absolute', 
+    top: '80%', 
+    left:"85%"
+  },
 })

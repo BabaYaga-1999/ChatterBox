@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { Button, StyleSheet, View, Text, TouchableOpacity, Image, FlatList, Pressable } from 'react-native';
-import MapView , {Marker} from "react-native-maps";
+import MapView , {Circle, Marker} from "react-native-maps";
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../utils/Firebase';
 import PressButton from '../components/PressButton';
 import { MaterialIcons } from '@expo/vector-icons';
-import { mapStyle } from '../styles/Styles';
+import { discoverStyle } from '../styles/Styles';
+import { FontAwesome } from '@expo/vector-icons';
+import BottomSheet from '@gorhom/bottom-sheet';
 
 const vanRegion = {
   latitude: 49.229292, 
@@ -16,7 +18,7 @@ const vanRegion = {
   longitudeDelta: 0.01,
 };
 
-mapStyle=[
+const mapStyle=[
   {
     featureType: "poi.business",
     stylers: [{ visibility: "off" }],
@@ -28,19 +30,44 @@ mapStyle=[
   },
 ]
 
+
+
 const DiscoverScreen = () => {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [postList, setPostList] = useState([]);
   const [reload, setReload] = useState(0);
+  const [permissionResponse, requestPermission] = Location.useForegroundPermissions();
+  const ref = useRef();
+  const bottomSheetRef = useRef();
 
+  // variables
+  const snapPoints = useMemo(() => ['25%', '50%'], []);
+
+  // callbacks
+  const handleSheetChanges = useCallback((index) => {
+    console.log('handleSheetChanges', index);
+  }, []);
+  function centerUserLocation(e){
+    if (location){
+      ref.current.animateToRegion({
+        latitude: location.coords?.latitude, 
+        longitude: location.coords?.longitude,           
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,})
+      console.log(1)
+    }
+  }
 
   useEffect(() => {
     (async () => {
+      console.log(1)
+      Location.set
+      let { status } = await requestPermission();
       
-      let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         setErrorMsg('Permission to access location was denied');
+        
         return;
       }
 
@@ -52,7 +79,6 @@ const DiscoverScreen = () => {
           setLocation(loc);
         }
       );
-      
     })();
   }, [reload]);
 
@@ -73,14 +99,21 @@ const DiscoverScreen = () => {
 
 
   return (
-    <View style={styles.container}>
+    <View style={discoverStyle.container}>
       <MapView 
-        style={styles.map} 
+        style={discoverStyle.map} 
         initialRegion={vanRegion} 
-        >
+        customMapStyle={mapStyle}
+        ref={ref}>
         {
-          location ? <Marker coordinate={{latitude: location.coords?.latitude, longitude: location.coords?.longitude }} /> : <></>
+          location ? <Marker coordinate={{latitude: location.coords?.latitude, longitude: location.coords?.longitude}} key={1}>
+            <FontAwesome name="dot-circle-o" size={30} color="#3462fa" />
+          </Marker> : <></>
         }
+        {
+          location ? <Circle center={{latitude: location.coords?.latitude, longitude: location.coords?.longitude }} radius={400} /> : <></>
+        }
+
         {
           postList.map((item)=>{
             return (
@@ -91,16 +124,28 @@ const DiscoverScreen = () => {
         }
         
       </MapView>
-      <View style={mapStyle.buttonWrapper}>
-        <Pressable style={mapStyle.button} onPress={()=>setReload(reload+1)}>
+      <View style={discoverStyle.buttonWrapper}>
+        <Pressable style={discoverStyle.button} onPress={()=>setReload(reload+1)}>
           <MaterialIcons name="refresh" size={50} color="black" />
         </Pressable>
       </View>
-      <View style={mapStyle.buttonWrapper}>
-        <Pressable style={mapStyle.button} onPress={()=>setReload(reload+1)}>
+      <View style={discoverStyle.centerButtonWrapper}>
+        <Pressable style={discoverStyle.button} onPress={()=>centerUserLocation()}>
           <Ionicons name="location-outline" size={50} color="black" />
         </Pressable>
       </View>
+
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={1}
+        snapPoints={snapPoints}
+        onChange={handleSheetChanges}
+      >
+        <View style={styles.contentContainer}>
+          <Text>Awesome 🎉</Text>
+        </View>
+      </BottomSheet>
+
     </View>
   );
 };
@@ -109,11 +154,12 @@ const DiscoverScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 24,
+    backgroundColor: 'grey',
   },
-  map: {
-    width: '100%',
-    height: '100%',
+  contentContainer: {
+    flex: 1,
+    alignItems: 'center',
   },
 });
-
 export default DiscoverScreen;
