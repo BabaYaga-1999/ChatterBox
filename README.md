@@ -66,4 +66,5 @@ This data model allows for efficient querying and retrieval of chat sessions, in
 Installations:
 npm install --save react-native-swipeout   
 npm install --save react-native-swipe-list-view
+npm install --save expo install expo-notifications
 
