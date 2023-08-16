@@ -360,3 +360,86 @@ export const discoverStyle = StyleSheet.create({
     left:"85%"
   },
 })
+
+export const chatStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'space-between',
+    backgroundColor: 'white'
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderTopWidth: 0.3,
+    borderColor: '#d1d1d1',
+    backgroundColor: 'white',
+  },
+  textInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    borderColor: 'gray',
+    borderWidth: 1,
+    borderRadius: 10,
+    marginRight: 10,
+    paddingHorizontal: 10
+  },
+  input: {
+    flex: 1,
+    padding: 10,
+    paddingLeft: 15,
+    paddingRight: 35,
+    borderRadius: 20
+  },
+  insideIcon: {
+    position: 'absolute',
+    right: 10,
+  },
+  messageBox: {
+    padding: 12,
+    borderRadius: 10,
+    margin: 5,
+    maxWidth: '75%',
+  },
+  leftMsg: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFD1DC',
+    flex: 2
+  },
+  rightMsg: {
+    alignSelf: 'flex-end',
+    backgroundColor: '#A8E6CF',
+    flex: 2  // Adjust flex for message alignment
+  },
+  messageText: {
+    fontSize: 16,
+  },
+  messageImage: {  // New style for the image
+    width: 200,  // Makes sure image takes full width of the messageBox
+    height: 200,    // Fixed height for the image
+    borderRadius: 8, // Optional, adds some rounding to the image
+    resizeMode: 'cover'  // To ensure image covers the full view and looks nice
+  },
+  SafeAreaView: {
+    flex: 1,
+    backgroundColor: 'white'
+  },
+  attachmentOptionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    backgroundColor: 'white',
+    paddingVertical: 10,
+    borderTopWidth: 0.3, 
+    borderColor: '#d1d1d1',
+  }, 
+  attachmentOption: {
+    alignItems: 'center',
+    padding: 7,
+    backgroundColor: 'rgba(230,230,230,0.6)',
+    borderRadius: 10,
+    width: '20%',  // Ensures all attachment options have the same width
+    justifyContent: 'center'
+  },
+});
