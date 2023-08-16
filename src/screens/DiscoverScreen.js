@@ -9,7 +9,8 @@ import PressButton from '../components/PressButton';
 import { MaterialIcons } from '@expo/vector-icons';
 import { discoverStyle } from '../styles/Styles';
 import { FontAwesome } from '@expo/vector-icons';
-import BottomSheet from '@gorhom/bottom-sheet';
+import BottomSheet, { useBottomSheet } from '@gorhom/bottom-sheet';
+import PostView from '../components/PostView';
 
 const vanRegion = {
   latitude: 49.229292, 
@@ -36,18 +37,20 @@ const DiscoverScreen = () => {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [postList, setPostList] = useState([]);
+  const [post, setPost] = useState();
   const [reload, setReload] = useState(0);
   const [permissionResponse, requestPermission] = Location.useForegroundPermissions();
   const ref = useRef();
   const bottomSheetRef = useRef();
+  const snapPoints = useMemo(() => ['50%', '50%'], []);
+  
 
-  // variables
-  const snapPoints = useMemo(() => ['25%', '50%'], []);
 
-  // callbacks
-  const handleSheetChanges = useCallback((index) => {
-    console.log('handleSheetChanges', index);
-  }, []);
+
+  function onMarkerPress(item){
+    bottomSheetRef.current.expand();
+    setPost(item);
+  }
   function centerUserLocation(e){
     if (location){
       ref.current.animateToRegion({
@@ -117,7 +120,10 @@ const DiscoverScreen = () => {
         {
           postList.map((item)=>{
             return (
-              <Marker coordinate={{latitude: item.gps.coords.latitude, longitude: item.gps.coords.longitude }} key={item.key}>
+              <Marker 
+              coordinate={{latitude: item.gps.coords.latitude, longitude: item.gps.coords.longitude }} 
+              key={item.key}
+              onPress={()=>onMarkerPress(item)}>
                 <Ionicons name="chatbox-ellipses-sharp" size={40} color="red" />
               </Marker>)
           })
@@ -139,11 +145,10 @@ const DiscoverScreen = () => {
         ref={bottomSheetRef}
         index={1}
         snapPoints={snapPoints}
-        onChange={handleSheetChanges}
+        enablePanDownToClose={true}
       >
-        <View style={styles.contentContainer}>
-          <Text>Awesome 🎉</Text>
-        </View>
+        {post ? <PostView post={post} /> : <></>}
+        
       </BottomSheet>
 
     </View>
