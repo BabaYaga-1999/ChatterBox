@@ -71,3 +71,6 @@ npm install --save expo-image-picker
 npm install --save expo-location
 npm install --save @firebase/storage
 npm install --save react-native-maps
+npm install --save openai
+npm install --save expo-clipboard
+npx expo install expo-clipboard@~4.1.2

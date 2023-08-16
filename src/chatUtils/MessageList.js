@@ -3,6 +3,8 @@ import { View, Text, FlatList, Image, Modal, TouchableOpacity } from 'react-nati
 import { chatStyles as styles } from '../styles/Styles';
 import MapView, { Marker } from 'react-native-maps';
 
+import MessageActions from './MessageActions';
+
 const MessageList = ({ messages, friendName, auth }) => {
   const flatListRef = useRef(null);
   const [isModalVisible, setModalVisible] = useState(false); // controls whether the modal is visible or not
@@ -91,17 +93,17 @@ const MessageList = ({ messages, friendName, auth }) => {
         const timestampFormat = formatTimestamp(item.createdAt);
         
         return (
-          <View style={{ padding: 10, paddingTop: showName ? 10 : 0 }}>
-            <View style={{ alignItems: 'center' }}>
+          <View style={styles.messageContainer}>
+            <View style={styles.timestampContainer}>
               {showDate && timestampFormat.date && 
-                <Text style={{ textAlign: 'center', color: 'grey' }}>{timestampFormat.date}</Text>
+                <Text style={styles.timestampText}>{timestampFormat.date}</Text>
               }
               {showTime && 
-                <Text style={{ textAlign: 'center', color: 'grey' }}>{timestampFormat.time}</Text>
+                <Text style={styles.timestampText}>{timestampFormat.time}</Text>
               }
             </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              {showName && item.userId !== auth.currentUser.uid && <Text style={{ color: 'grey', fontWeight: 'bold', flex: 1, paddingLeft: 5 }}>{friendName}</Text>}
+            <View style={styles.nameAndMessageContainer}>
+              {showName && item.userId !== auth.currentUser.uid && <Text style={styles.friendNameText}>{friendName}</Text>}
             </View>
             <View style={[
               styles.messageBox,
@@ -120,6 +122,11 @@ const MessageList = ({ messages, friendName, auth }) => {
                 }
               <Text style={styles.messageText}>{item.text}</Text>
             </View>
+            {item.text && item.userId !== auth.currentUser.uid && 
+              <View style={styles.actionIconsContainer}>
+                <MessageActions text={item.text} />
+              </View>
+            }
           </View>
         );
       }}
@@ -130,24 +137,26 @@ const MessageList = ({ messages, friendName, auth }) => {
     />
 
     <Modal
-          animationType="slide"
-          transparent={false}
-          visible={isModalVisible}
-          onRequestClose={closeImageModal} 
-      >
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'black' }}>
-              <Image 
-                  source={{ uri: currentImage }} 
-                  style={{ width: '100%', height: '100%', resizeMode: 'contain' }} 
-              />
-              <TouchableOpacity onPress={closeImageModal} style={{ position: 'absolute', top: 630, right: 330 }}>
-                  <Text style={{ color: 'white', fontSize: 18 }}>Close</Text>
-              </TouchableOpacity>
-          </View>
-      </Modal>
+      animationType="slide"
+      transparent={false}
+      visible={isModalVisible}
+      onRequestClose={closeImageModal} 
+    >
+      <View style={styles.modalContainer}>
+          <Image 
+              source={{ uri: currentImage }} 
+              style={styles.modalImage} 
+          />
+          <TouchableOpacity onPress={closeImageModal} style={styles.closeModalButton}>
+              <Text style={styles.closeModalButtonText}>Close</Text>
+          </TouchableOpacity>
+      </View>
+  </Modal>
 
     </View>
   );
 };
 
-export default MessageList;
+// React.memo() is a higher order component that will prevent the component 
+// from re-rendering if the props and state do not change
+export default React.memo(MessageList);
