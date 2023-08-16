@@ -5,6 +5,7 @@ import colors from "../styles/Color"
 import { Ionicons } from '@expo/vector-icons';
 import { writeToDB } from '../utils/FirestoreHelper';
 import * as Location from 'expo-location';
+import { auth } from '../utils/Firebase';
 
 export default function CreatePost({navigation}) {
   const [title, setTitle] = useState("");
@@ -27,7 +28,7 @@ export default function CreatePost({navigation}) {
     let gps = await Location.getCurrentPositionAsync({});
     console.log(gps)
 
-    writeToDB({title, description, gps});
+    writeToDB({title, description, gps, authorId: auth.currentUser.uid});
     reset();
     navigation.goBack();
   }
