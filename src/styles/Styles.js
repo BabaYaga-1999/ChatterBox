@@ -442,4 +442,54 @@ export const chatStyles = StyleSheet.create({
     width: '20%',  // Ensures all attachment options have the same width
     justifyContent: 'center'
   },
+  actionIconsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  actionIcon: {
+    marginLeft: 20,
+  },
+  messageContainer: {
+    padding: 10
+  },
+  timestampContainer: {
+    alignItems: 'center'
+  },
+  timestampText: {
+    textAlign: 'center',
+    color: 'grey'
+  },
+  nameAndMessageContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  friendNameText: {
+    color: 'grey',
+    fontWeight: 'bold',
+    flex: 1,
+    paddingLeft: 5
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'black'
+  },
+  modalImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain'
+  },
+  closeModalButton: {
+    position: 'absolute',
+    top: 700,
+    right: 330
+  },
+  closeModalButtonText: {
+    color: 'white',
+    fontSize: 18
+  },
 });

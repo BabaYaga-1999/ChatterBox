@@ -1,8 +1,26 @@
-Team members:  
-Yucheng Wang  
-Xiangyuan Ding
+Contribution
+
+SignUpScreen and LoginScreen are modified from instructor's Github
+
+Yucheng Wang: ChatScreen, ChatsScreen, FriendsScreen, SearchScreen, Firebase and OpenAI setup
+
+Xiangyuan Ding: DiscoverScreen, ProfileScreen, components, utils, styles
+
+Authentication: SignupScreen, LoginScreen
+
+Camera use: ChatScreen (AttachmentOptions)
+
+Location use: ChatScreen (AttachmentOptions), DiscoverScreen
+
+Notification: ProfileScreen (Discover Reminder)
+
+External API use: ChatScreen (MessageActions): ChatGPT 3.5 Turbo API
+
+![image-20230816214336312](./image-20230816214336312.png)
+![image-20230816214407187](./image-20230816214407187.png)
 
 Data Model
+
 1. Collections:
 
 There are three primary collections:
@@ -71,3 +89,6 @@ npm install --save expo-image-picker
 npm install --save expo-location
 npm install --save @firebase/storage
 npm install --save react-native-maps
+npm install --save openai
+npm install --save expo-clipboard
+npx expo install expo-clipboard@~4.1.2

@@ -3,15 +3,14 @@ import { View, Text, TextInput, Button, FlatList, StyleSheet, KeyboardAvoidingVi
 import { collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { db, auth, storage } from '../utils/Firebase';
 import { SafeAreaView } from 'react-native';
-import { MaterialCommunityIcons, MaterialIcons, FontAwesome, Entypo } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { chatStyles as styles } from '../styles/Styles';
 import { ref as storageRef, uploadBytesResumable, getDownloadURL } from '@firebase/storage';
 
-import MessageList from './MessageList';
-import AttachmentOptions from './AttachmentOptions';
-import MessageInput from './MessageInput';
+import MessageList from '../chatUtils/MessageList';
+import AttachmentOptions from '../chatUtils/AttachmentOptions';
+import MessageInput from '../chatUtils/MessageInput';
 
 const ChatScreen = ({ route, navigation }) => {
   const [messages, setMessages] = useState([]);
@@ -240,11 +239,9 @@ const ChatScreen = ({ route, navigation }) => {
         quality: 1,
     });
 
-    if (!result.canceled) {launchImageLibraryAsynImages
+    if (!result.canceled && result.assets && result.assets.length > 0) {
         // upload the image to firebase storage
-        if (!result.canceled && result.assets && result.assets.length > 0) {
         uploadImage(result.assets[0].uri);
-  }
     }
   };
 
