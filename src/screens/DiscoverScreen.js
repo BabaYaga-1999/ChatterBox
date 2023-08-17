@@ -3,7 +3,7 @@ import { Button, StyleSheet, View, Text, TouchableOpacity, Image, FlatList, Pres
 import MapView , {Circle, Marker} from "react-native-maps";
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../utils/Firebase';
 import PressButton from '../components/PressButton';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import { discoverStyle } from '../styles/Styles';
 import { FontAwesome } from '@expo/vector-icons';
 import BottomSheet, { useBottomSheet } from '@gorhom/bottom-sheet';
 import PostView from '../components/PostView';
+import { auth } from '../utils/Firebase';
 
 const vanRegion = {
   latitude: 49.229292, 
@@ -38,6 +39,7 @@ const DiscoverScreen = () => {
   const [errorMsg, setErrorMsg] = useState(null);
   const [postList, setPostList] = useState([]);
   const [post, setPost] = useState();
+  const [user, setUser] = useState();
   const [reload, setReload] = useState(0);
   const [permissionResponse, requestPermission] = Location.useForegroundPermissions();
   const ref = useRef();
@@ -45,11 +47,30 @@ const DiscoverScreen = () => {
   const snapPoints = useMemo(() => ['50%', '50%'], []);
   
 
-
+  function calculateDistance(userLoc, postLoc){
+    const latDistance = userLoc.coords.latitude-postLoc.coords.latitude;
+    const longDistance = userLoc.coords.longitude-postLoc.coords.longitude;
+    const distance = Math.sqrt(Math.pow(latDistance, 2) + Math.pow(longDistance, 2))
+    return distance;
+  }
 
   function onMarkerPress(item){
-    bottomSheetRef.current.expand();
-    setPost(item);
+    if (isInFriendList(item.authorId) || item.authorId==auth.currentUser.uid){
+      bottomSheetRef.current.expand();
+      setPost(item);
+    } else {
+      if (!location){
+        alert("Please turn on the location")
+        return;
+      }
+      if(calculateDistance(location, item.gps) > 0.00565){
+        alert("You are out of distance")
+        return;
+      }
+      bottomSheetRef.current.expand();
+      setPost(item);
+    }
+
   }
   function centerUserLocation(e){
     if (location){
@@ -59,6 +80,28 @@ const DiscoverScreen = () => {
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,})
       console.log(1)
+    }
+  }
+  function isInFriendList(authorId){
+    if (!user){
+      return false;
+    }
+    for (let i=0;i<user.friends.length;i++){
+      if (user.friends[i].id==authorId){
+        return true;
+      }
+    }
+    return false;
+  }
+  function setColor(item){
+    if (item.authorId==auth.currentUser.uid){
+      return "orange"
+    }else if (isInFriendList(item.authorId)){
+      return "green"
+    }else if (location && calculateDistance(location,item.gps) > 0.00565){
+      return "#b1b0b0"
+    }else{
+      return "red"
     }
   }
 
@@ -99,7 +142,13 @@ const DiscoverScreen = () => {
     };
   }, []);
 
+  useEffect(()=>{
+    (async () =>{
+      const tempUser = await getDoc(doc(db, "users", auth.currentUser.uid));
+      setUser(tempUser.data())
 
+    })();
+  },[])
 
   return (
     <View style={discoverStyle.container}>
@@ -124,7 +173,7 @@ const DiscoverScreen = () => {
               coordinate={{latitude: item.gps.coords.latitude, longitude: item.gps.coords.longitude }} 
               key={item.key}
               onPress={()=>onMarkerPress(item)}>
-                <Ionicons name="chatbox-ellipses-sharp" size={40} color="red" />
+                <Ionicons name="chatbox-ellipses-sharp" size={40} color={setColor(item)} />
               </Marker>)
           })
         }
@@ -143,7 +192,7 @@ const DiscoverScreen = () => {
 
       <BottomSheet
         ref={bottomSheetRef}
-        index={1}
+        index={-1}
         snapPoints={snapPoints}
         enablePanDownToClose={true}
       >
