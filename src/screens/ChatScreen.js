@@ -1,16 +1,23 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, FlatList, StyleSheet, KeyboardAvoidingView, Platform, Alert, TouchableOpacity } from 'react-native';
 import { collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, getDoc } from 'firebase/firestore';
-import { db, auth } from '../utils/Firebase';
+import { db, auth, storage } from '../utils/Firebase';
 import { SafeAreaView } from 'react-native';
 import { MaterialCommunityIcons, MaterialIcons, FontAwesome, Entypo } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
+import { chatStyles as styles } from '../styles/Styles';
+import { ref as storageRef, uploadBytesResumable, getDownloadURL } from '@firebase/storage';
+
+import MessageList from './MessageList';
+import AttachmentOptions from './AttachmentOptions';
+import MessageInput from './MessageInput';
 
 const ChatScreen = ({ route, navigation }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [userDeletionTimestamp, setUserDeletionTimestamp] = useState(null);
   const [canSendMessage, setCanSendMessage] = useState(true);
-  const flatListRef = useRef(null);
   const { chatId, friendName } = route.params;
   const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
 
@@ -116,32 +123,6 @@ const ChatScreen = ({ route, navigation }) => {
       }
   };
 
-  const formatTimestamp = (timestamp) => {
-    const date = new Date(timestamp);
-    const today = new Date();
-
-    const timeString = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-
-    // If the message was sent today, only return the time
-    if (date.toDateString() === today.toDateString()) {
-      return { time: timeString };
-    }
-
-    // If the message was sent before today, return the date and time
-    const dateString = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-    return {
-      date: dateString,
-      time: timeString
-    };
-  };
-
-  // Scroll to the bottom of the FlatList when a new message is sent
-  const scrollToBottom = () => {
-    if (messages.length > 0) {
-        flatListRef.current.scrollToEnd({ animated: true });
-    }
-  };
-
   const checkIfInFriendList = async () => {
     try {
       // 获取当前聊天的成员
@@ -210,37 +191,123 @@ const ChatScreen = ({ route, navigation }) => {
       checkIfInFriendList();
   }, []);
 
-  const handlePhotoOption = () => {
-        // TODO: Implement function to handle the photo option
-        console.log("Send photo");
+  const requestImagePermissions = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+        alert('Sorry, we need camera roll permissions to make this work!');
+        return false;
+    }
+    return true;
+  };
+
+  const requestCameraPermissions = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+        alert('Sorry, we need camera permissions to make this work!');
+        return false;
+    }
+    return true;
+  };
+  
+  const uploadImage = async (uri) => {
+    try {
+        const response = await fetch(uri);
+        const blob = await response.blob();
+
+        const uniqueImageName = `${auth.currentUser.uid}_${new Date().getTime()}.jpg`;
+        const imageRef = storageRef(storage, "chat_images/" + uniqueImageName);
+        const uploadResult = await uploadBytesResumable(imageRef, blob);
+
+        const downloadURL = await getDownloadURL(uploadResult.ref);
+        const newMessage = {
+            imageUrl: downloadURL,
+            createdAt: new Date().toISOString(),
+            userId: auth.currentUser.uid,
+        };
+        await addDoc(collection(db, 'chats', chatId, 'messages'), newMessage);
+    } catch (error) {
+        console.error("Error in uploadImage:", error);
+    }
+  };
+
+  const handlePhotoOption = async () => {
+    const permission = await requestImagePermissions();
+    if (!permission) return;
+    let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+    });
+
+    if (!result.canceled) {launchImageLibraryAsynImages
+        // upload the image to firebase storage
+        if (!result.canceled && result.assets && result.assets.length > 0) {
+        uploadImage(result.assets[0].uri);
+  }
+    }
+  };
+
+  const handleCameraOption = async () => {
+    const permission = await requestCameraPermissions();
+    if (!permission) return;
+    let result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+    });
+
+    if (!result.canceled) {
+        // upload the image to firebase storage
+        if (!result.canceled && result.assets && result.assets.length > 0) {
+        uploadImage(result.assets[0].uri);
+  }
+    }
+  };
+  
+  const handleLocationOption = async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+        Alert.alert('Permission to access location was denied');
+        return;
+    }
+    // will take a few seconds to fetch the location
+    let location = await Location.getCurrentPositionAsync({});
+    if (!location || !location.coords) {
+      Alert.alert('Error', 'Unable to fetch the location.');
+      return;
     }
 
-    const handleCameraOption = () => {
-        // TODO: Implement function to handle the camera option
-        console.log("Take a photo");
-    }
-
-    const handleLocationOption = () => {
-        // TODO: Implement function to send the user's location
-        console.log("Send location");
-    }
-
-    const renderAttachmentOptions = () => (
-      <View style={styles.attachmentOptionsContainer}>
-        <TouchableOpacity style={styles.attachmentOption} onPress={handlePhotoOption}>
-          <FontAwesome name="photo" size={24} color="black" />
-          <Text>Photo</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.attachmentOption} onPress={handleCameraOption}>
-          <Entypo name="camera" size={24} color="black" />
-          <Text>Camera</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.attachmentOption} onPress={handleLocationOption}>
-          <Entypo name="location" size={24} color="black" />
-          <Text>Location</Text>
-        </TouchableOpacity>
-      </View>
+    // Confirm with the user before sending the location
+    Alert.alert(
+      'Send Location',
+      'Do you want to send your location to the user?',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel'
+        },
+        {
+          text: 'Send', 
+          onPress: async () => {
+            // you can send location.coords.latitude and location.coords.longitude to firebase
+            const newMessage = {
+                location: {
+                    latitude: location.coords.latitude,
+                    longitude: location.coords.longitude
+                },
+                createdAt: new Date().toISOString(),
+                userId: auth.currentUser.uid,
+            };
+            console.log(location);
+            await addDoc(collection(db, 'chats', chatId, 'messages'), newMessage);
+          }
+        }
+      ],
+      { cancelable: false }
     );
+  };
 
 return (
   <SafeAreaView style={styles.SafeAreaView}>
@@ -249,160 +316,24 @@ return (
     behavior={Platform.OS === "ios" ? "padding" : "height"}
     keyboardVerticalOffset={Platform.OS === "ios" ? 95 : 95}
   >
-    <FlatList
-      ref={flatListRef}
-      data={messages}
-      renderItem={({ item, index }) => {
-        let showDate = true;
-        let showTime = true;
-        let showName = true;
-
-        if (index > 0) {
-          const prevMessage = messages[index - 1];
-
-          const diffInMinutes = (new Date(item.createdAt) - new Date(prevMessage.createdAt)) / (60 * 1000); // difference in minutes
-          if (diffInMinutes < 1) {
-            showTime = false;
-          }
-
-          if (item.userId === prevMessage.userId) {
-            showName = false;
-          }
-        }
-
-        const timestampFormat = formatTimestamp(item.createdAt);
-        
-        return (
-          <View style={{ padding: 10, paddingTop: showName ? 10 : 0 }}>
-            <View style={{ alignItems: 'center' }}>
-              {showDate && timestampFormat.date && 
-                <Text style={{ textAlign: 'center', color: 'grey' }}>{timestampFormat.date}</Text>
-              }
-              {showTime && 
-                <Text style={{ textAlign: 'center', color: 'grey' }}>{timestampFormat.time}</Text>
-              }
-            </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              {showName && item.userId !== auth.currentUser.uid && <Text style={{ color: 'grey', fontWeight: 'bold', flex: 1, paddingLeft: 5 }}>{friendName}</Text>}
-            </View>
-            <View style={[
-              styles.messageBox,
-              item.userId === auth.currentUser.uid ? styles.rightMsg : styles.leftMsg
-            ]}>
-              <Text style={styles.messageText}>{item.text}</Text>
-            </View>
-          </View>
-        );
-      }}
-
-      keyExtractor={(item) => item.id}
-      onContentSizeChange={scrollToBottom}
-      onLayout={scrollToBottom}
+    <MessageList messages={messages} friendName={friendName} auth={auth} />
+    <MessageInput 
+        input={input}
+        setInput={setInput}
+        sendMessage={sendMessage}
+        canSendMessage={canSendMessage}
+        toggleAttachmentOptions={() => setShowAttachmentOptions(!showAttachmentOptions)}
     />
-      <View style={styles.inputContainer}>
-        <View style={styles.textInputWrapper}>
-            <TextInput
-                value={input}
-                onChangeText={setInput}
-                style={styles.input}
-                placeholder="Type a message..."
-            />
-            {input.trim() !== "" && canSendMessage && (
-                <MaterialCommunityIcons name="send-circle-outline" size={28} color="black" onPress={sendMessage} style={styles.insideIcon} />
-            )}
-        </View>
-        {canSendMessage && (
-            <MaterialIcons 
-                name="add-circle-outline" 
-                size={28} 
-                color="black" 
-                onPress={() => setShowAttachmentOptions(!showAttachmentOptions)}
-            />
-        )}
-        
-    </View>
-    {showAttachmentOptions && renderAttachmentOptions()}
+    {showAttachmentOptions && 
+        <AttachmentOptions 
+            handlePhotoOption={handlePhotoOption}
+            handleCameraOption={handleCameraOption}
+            handleLocationOption={handleLocationOption}
+        />
+    }
     </KeyboardAvoidingView>
   </SafeAreaView>
 );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'space-between',
-    backgroundColor: 'white'
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderTopWidth: 0.3,
-    borderColor: '#d1d1d1',
-    backgroundColor: 'white',
-  },
-  textInputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    borderColor: 'gray',
-    borderWidth: 1,
-    borderRadius: 10,
-    marginRight: 10,
-    paddingHorizontal: 10
-  },
-  input: {
-    flex: 1,
-    padding: 10,
-    paddingLeft: 15,
-    paddingRight: 35,
-    borderRadius: 20
-  },
-  insideIcon: {
-    position: 'absolute',
-    right: 10,
-  },
-  messageBox: {
-    padding: 12,
-    borderRadius: 10,
-    margin: 5,
-    maxWidth: '75%',
-  },
-  leftMsg: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#FFD1DC',
-    flex: 2
-  },
-  rightMsg: {
-    alignSelf: 'flex-end',
-    backgroundColor: '#A8E6CF',
-    flex: 2  // Adjust flex for message alignment
-  },
-  messageText: {
-    fontSize: 16,
-  },
-  SafeAreaView: {
-    flex: 1,
-    backgroundColor: 'white'
-  },
-  attachmentOptionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    backgroundColor: 'white',
-    paddingVertical: 10,
-    borderTopWidth: 0.3, 
-    borderColor: '#d1d1d1',
-  }, 
-  attachmentOption: {
-    alignItems: 'center',
-    padding: 7,
-    backgroundColor: 'rgba(230,230,230,0.6)',
-    borderRadius: 10,
-    width: '17%',  // Ensures all attachment options have the same width
-    justifyContent: 'center'
-  },
-
-});
 
 export default ChatScreen;

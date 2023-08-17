@@ -67,4 +67,7 @@ Installations:
 npm install --save react-native-swipeout   
 npm install --save react-native-swipe-list-view
 npm install --save expo install expo-notifications
-
+npm install --save expo-image-picker
+npm install --save expo-location
+npm install --save @firebase/storage
+npm install --save react-native-maps
