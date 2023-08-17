@@ -1,13 +1,21 @@
 Contribution
+
 SignUpScreen and LoginScreen are modified from instructor's Github
+
 Yucheng Wang: ChatScreen, ChatsScreen, FriendsScreen, SearchScreen, Firebase and OpenAI setup
+
 Xiangyuan Ding: DiscoverScreen, ProfileScreen, components, utils, styles
 
 Authentication: SignupScreen, LoginScreen
+
 Camera use: ChatScreen (AttachmentOptions)
+
 Location use: ChatScreen (AttachmentOptions), DiscoverScreen
+
 Notification: ProfileScreen (Discover Reminder)
+
 External API use: ChatScreen (MessageActions): ChatGPT 3.5 Turbo API
+
 ![image-20230816214336312](./image-20230816214336312.png)
 ![image-20230816214407187](./image-20230816214407187.png)
 
