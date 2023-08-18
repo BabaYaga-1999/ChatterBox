@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, TouchableOpacity, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, TouchableOpacity, Alert, Modal, TextInput, Text, Button } from 'react-native';
 import { MaterialCommunityIcons, FontAwesome, Entypo } from '@expo/vector-icons';
 import { chatStyles as styles } from '../styles/Styles';
 import * as Clipboard from 'expo-clipboard';
@@ -8,7 +8,10 @@ const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 const API_KEY = process.env.OPENAI_API_KEY;  // Use API key from .env
 
 const MessageActions = ({ text }) => {
-
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalContent, setModalContent] = useState("");
+  
   const callOpenAIApi = async (messages) => {
     try {
       const response = await fetch(OPENAI_URL, {
@@ -45,14 +48,15 @@ const MessageActions = ({ text }) => {
   };
 
   const showAlertWithCopy = (title, message) => {
-    Alert.alert(
-      title,
-      message,
-      [
-        { text: "Copy", onPress: () => Clipboard.setString(message) },
-        { text: "OK" }
-      ]
-    );
+    setModalTitle(title);
+    setModalContent(message);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setModalTitle("");
+    setModalContent("");
   };
 
   const handleTranslate = async () => {
@@ -95,17 +99,42 @@ const MessageActions = ({ text }) => {
   };
 
   return (
-    <View style={styles.actionIconsContainer}>
-      <TouchableOpacity onPress={handleTranslate} style={styles.actionIcon}>
-        <FontAwesome name="language" size={22} color="black" />
-      </TouchableOpacity>
-      <TouchableOpacity onPress={handleReplySuggestion} style={styles.actionIcon}>
-        <MaterialCommunityIcons name="comment-text-multiple" size={22} color="black" />
-      </TouchableOpacity>
-      <TouchableOpacity onPress={handleMore} style={styles.actionIcon}>
-        <Entypo name="dots-three-horizontal" size={22} color="black" />
-      </TouchableOpacity>
+    <>
+      <View style={styles.actionIconsContainer}>
+        <TouchableOpacity onPress={handleTranslate} style={styles.actionIcon}>
+          <FontAwesome name="language" size={22} color="black" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleReplySuggestion} style={styles.actionIcon}>
+          <MaterialCommunityIcons name="comment-text-multiple" size={22} color="black" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleMore} style={styles.actionIcon}>
+          <Entypo name="dots-three-horizontal" size={22} color="black" />
+        </TouchableOpacity>
     </View>
+    <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={closeModal}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{modalTitle}</Text>
+            <TextInput
+              value={modalContent}
+              editable={false}
+              multiline
+              style={styles.modalTextInput}
+              selectTextOnFocus
+            />
+            <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+              <Text>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </>
+    
 
   );
 };
