@@ -5,6 +5,7 @@ import { db, auth } from '../utils/Firebase';
 import { collection, onSnapshot, query, orderBy, doc, deleteDoc, getDoc, updateDoc, where } from 'firebase/firestore';
 import { chatsStyles as styles } from '../styles/Styles';
 import { LogBox } from 'react-native';
+import ChatItem from './ChatItem';
 
 // Utility function to check if user has deleted the chat
 const hasUserDeletedChat = (deletedBy, uid) => {
@@ -180,26 +181,17 @@ const ChatsScreen = ({ navigation }) => {
     }
 };
 
-  const renderItem = ({ item }) => (
-    <TouchableHighlight
-      onPress={() => {
-        const friendName = userNames[item.members.find(id => id !== auth.currentUser.uid)] || "Unknown";
-        navigateToChat(item.id, friendName);
-      }}
-      underlayColor={'#fff'}
-    >
-      <View style={styles.chatItem}>
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontWeight: 'bold' }}>
-            {userNames[item.members.find(id => id !== auth.currentUser.uid)] || "Unknown"}
-          </Text>
-          <Text>{item.lastMessage}</Text>
-        </View>
-        {item.lastMessage && 
-          <Text style={{ marginLeft: 10 }}>{formatDate(item.lastMessageTime)}</Text>}
-      </View>
-    </TouchableHighlight>
-);
+  const renderItem = ({ item }) => {
+    const friendName = userNames[item.members.find(id => id !== auth.currentUser.uid)] || "Unknown";
+    return (
+      <ChatItem
+        item={item}
+        userName={friendName}
+        formatDate={formatDate}
+        onPress={() => navigateToChat(item.id, friendName)}
+      />
+    );
+  };
 
   const renderHiddenItem = (data, rowMap) => (
     <View style={styles.rowBack}>

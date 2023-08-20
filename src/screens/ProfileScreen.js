@@ -21,7 +21,7 @@ const ProfileScreen = () => {
   const navigation = useNavigation();
   const [user, setUser] = useState();
   const [refresh, setRefresh] = useState(true);
-  var image = require('../images/Unknown_person.jpg')
+  var image = require('../images/default_avatar.png')
 
   try{
     if(user.data().avatar){
@@ -168,7 +168,7 @@ const ProfileScreen = () => {
   return (
     <View>
       <View style={styles.contentContainer}>
-        <TouchableOpacity onPress={handleCameraOption}>
+        <TouchableOpacity onPress={handlePhotoOption}>
           <Image style={styles.stretch} source={image} />
         </TouchableOpacity>
         

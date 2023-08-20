@@ -149,6 +149,30 @@ export const chatsStyles = StyleSheet.create({
     color: '#FFF',
     fontWeight: 'bold',
   },
+  chatAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 10
+  },
+  chatTextContainer: {
+    flex: 1,
+    flexDirection: 'column'
+  },
+  chatFriendName: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 2
+  },
+  chatLastMessage: {
+    color: '#666',
+    fontSize: 14
+  },
+  chatTime: {
+    marginLeft: 10,
+    color: '#999',
+    fontSize: 12
+  }
 });
 
 export const friendStyles = StyleSheet.create({
@@ -185,10 +209,10 @@ export const friendStyles = StyleSheet.create({
         height: 60,
     },
     avatar: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        marginRight: 15
+      width: 45,
+      height: 45,
+      borderRadius: 30,
+      marginRight: 10
     },
     friendName: {
         fontSize: 16,

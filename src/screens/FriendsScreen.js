@@ -5,6 +5,7 @@ import { collection, addDoc, query, where, getDoc, getDocs, doc, onSnapshot, upd
 import { friendStyles as styles } from '../styles/Styles';
 import { AntDesign } from '@expo/vector-icons';
 import { SwipeListView } from 'react-native-swipe-list-view';
+import FriendItem from './FriendItem';
 
 const FriendsScreen = ({ navigation }) => {
   const [friends, setFriends] = useState([]);
@@ -132,18 +133,9 @@ const FriendsScreen = ({ navigation }) => {
     }
   };
 
-  const renderItem = ({ item }) => (
-    <TouchableHighlight
-      underlayColor={'#f0f0f0'}
-      onPress={() => startChat(item)}
-      style={styles.listItem}
-    >
-      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-          <Image source={{ uri: item.avatar }} style={styles.avatar} />
-          <Text style={styles.friendName}>{item.name}</Text>
-      </View>
-    </TouchableHighlight>
-    );
+  const renderItem = ({ item }) => {
+    return <FriendItem item={item} onPress={() => startChat(item)} />;
+  };
 
   const renderHiddenItem = (data, rowMap) => (
     <View style={styles.rowBack}>
