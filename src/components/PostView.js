@@ -8,6 +8,12 @@ export default function PostView({post}) {
   const [user, setUser] = useState();
 
   var image = require('../images/Unknown_person.jpg');
+  try{
+    if(user.data().avatar){
+      image=user.data().avatar
+    }
+    
+  }catch{}
   const sendFriendRequest = async (userDoc) => {
     try {
       const friendRequestsRef = collection(db, 'friendRequests');
@@ -39,9 +45,7 @@ export default function PostView({post}) {
     })();
   }, [post])
 
-  if (post.avatar){
-    image=post.avatar
-  }
+
   
   return (
     <View style={styles.contentContainer} >
