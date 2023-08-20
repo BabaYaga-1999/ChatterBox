@@ -12,6 +12,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import BottomSheet, { useBottomSheet } from '@gorhom/bottom-sheet';
 import PostView from '../components/PostView';
 import { auth } from '../utils/Firebase';
+import { Entypo } from '@expo/vector-icons';
 
 const vanRegion = {
   latitude: 49.229292, 
@@ -158,8 +159,11 @@ const DiscoverScreen = () => {
         customMapStyle={mapStyle}
         ref={ref}>
         {
-          location ? <Marker coordinate={{latitude: location.coords?.latitude, longitude: location.coords?.longitude}} key={1}>
-            <FontAwesome name="dot-circle-o" size={30} color="#3462fa" />
+          location ? <Marker coordinate={{latitude: location.coords?.latitude, longitude: location.coords?.longitude}} key={1} style={{paddingTop:10}}>
+            <View >
+              <Entypo name="location-pin" size={35} color="#3462fa" />
+            </View>
+            
           </Marker> : <></>
         }
         {
