@@ -492,4 +492,42 @@ export const chatStyles = StyleSheet.create({
     color: 'white',
     fontSize: 18
   },
+  modalBackground: {
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  backgroundColor: 'rgba(0,0,0,0.5)' // Adding a semi-transparent background
+  },
+  modalContent: {
+    width: '85%',
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center'
+  },
+  modalTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 15
+  },
+  modalTextInput: {
+    borderColor: 'gray',
+    borderWidth: 1,
+    padding: 10,
+    width: '100%',
+    marginBottom: 20,
+    borderRadius: 10,
+    minHeight: 100
+  },
+  closeButton: {
+    marginTop: 10,
+    backgroundColor: '#FFD1DC', // Using the color you've used for the 'rightMsg' style
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  closeButtonText: {
+    color: 'white'
+  }
 });
