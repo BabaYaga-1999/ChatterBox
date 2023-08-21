@@ -9,8 +9,10 @@ const API_KEY = process.env.OPENAI_API_KEY;  // Use API key from .env
 
 const MessageActions = ({ text }) => {
   const [modalVisible, setModalVisible] = useState(false);
+  const [queryModalVisible, setQueryModalVisible] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [modalContent, setModalContent] = useState("");
+  const [queryDetail, setQueryDetail] = useState("");
   
   const callOpenAIApi = async (messages) => {
     try {
@@ -75,27 +77,18 @@ const MessageActions = ({ text }) => {
     showAlertWithCopy(`Suggested Reply to ${text}: `, result);
   };
 
-  const handleMore = async () => {
-    Alert.prompt(
-      `The message is ${text}`,
-      'Please provide more details for your query:',
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Submit",
-          onPress: async queryDetail => {
-            const messages = [
-              { "role": "user", "content": `My contact sends me message: ${text}, I'd like to query that ${queryDetail}` }
-            ];
-            const result = await callOpenAIApi(messages);
-            showAlertWithCopy('Query Result', result);
-          }
-        }
-      ]
-    );
+  const handleMore = () => {
+    setQueryModalVisible(true);
+  };
+
+  const handleQuerySubmit = async () => {
+    const messages = [
+      { "role": "user", "content": `My contact sends me message: ${text}, and I'd like to query that ${queryDetail}` }
+    ];
+    const result = await callOpenAIApi(messages);
+    showAlertWithCopy('Query Result', result);
+    setQueryDetail("");
+    setQueryModalVisible(false);
   };
 
   return (
@@ -124,18 +117,54 @@ const MessageActions = ({ text }) => {
               value={modalContent}
               editable={false}
               multiline
+              selectTextOnFocus={true}
               style={styles.modalTextInput}
-              selectTextOnFocus
             />
-            <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
-              <Text>Close</Text>
-            </TouchableOpacity>
+            <View style={styles.buttonRow}>
+              <TouchableOpacity style={styles.closeButton} onPress={() => Clipboard.setString(modalContent)}>
+                <Text>Copy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+                <Text>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={queryModalVisible}
+        onRequestClose={() => {
+          setQueryDetail(""); // Clear the input when closing without submitting
+          setQueryModalVisible(false);
+        }}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{`The message is ${text}`}</Text>
+            <TextInput
+              value={queryDetail}
+              onChangeText={setQueryDetail}
+              placeholder="Please provide more details for your query:"
+              style={styles.modalTextInput}
+            />
+            <View style={styles.buttonRow}>
+              <TouchableOpacity style={styles.closeButton} onPress={handleQuerySubmit}>
+                <Text>Submit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.closeButton} onPress={() => {
+                setQueryDetail(""); // Clear the input when cancelling
+                setQueryModalVisible(false);
+              }}>
+                <Text>Cancel</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
     </>
-    
-
   );
 };
 
