@@ -10,7 +10,7 @@ export default function PostView({post}) {
   var image = require('../images/Unknown_person.jpg');
   try{
     if(user.data().avatar){
-      image=user.data().avatar
+      image={uri:user.data().avatar}
     }
     
   }catch{}
@@ -50,11 +50,14 @@ export default function PostView({post}) {
   return (
     <View style={styles.contentContainer} >
       <View style={styles.profile}>
-        <Image
-          style={styles.stretch}
-          source={image}
-        />
-        <Text style={styles.text}>{user?.data().name}</Text>
+        <View style={styles.nameContainer} >
+          <Image
+            style={styles.stretch}
+            source={image}
+          />
+          <Text style={styles.text}>{user?.data().name}</Text>
+        </View>
+
         <PressButton text='follow' width={70} handlePress={()=>sendFriendRequest(user)}/>
       </View>
       <Text style={styles.title}>{post.title}</Text>
@@ -68,16 +71,22 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
+  nameContainer: {
+    flexDirection:"row"
+  },
   stretch: {
-    height:47,
-    width:47,
+    height:40,
+    width:40,
     borderRadius:100
   },
   profile: {
-    flexDirection:"row"
+    flexDirection:"row",
+    alignItems:"center",
+    justifyContent: "space-between",
+    width:"100%"
   },
   text: {
-    fontSize: 18,
+    fontSize: 27,
     color: "green",
     maxWidth: 200,
   },
