@@ -172,6 +172,17 @@ export const chatsStyles = StyleSheet.create({
     marginLeft: 10,
     color: '#999',
     fontSize: 12
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    marginTop: 10
+  },
+  actionButton: {
+    padding: 10,
+    margin: 5,
+    borderRadius: 5,
+    backgroundColor: '#f0f0f0'
   }
 });
 
