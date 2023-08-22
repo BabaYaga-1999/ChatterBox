@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text, Alert, StyleSheet } from 'react-native';
+import { View, TextInput, Button, Text, Alert, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { auth, db } from '../utils/Firebase';
 import { query, where, addDoc, getDocs, collection, updateDoc, arrayUnion, doc, getDoc } from 'firebase/firestore';
 import { searchStyles as styles } from '../styles/Styles'
 import { AntDesign } from '@expo/vector-icons';
 import PressButton from '../components/PressButton';
+import { SwipeListView } from 'react-native-swipe-list-view';
+import FriendItem from './FriendItem';
 
 const SearchScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  const [searchResult, setSearchResult] = useState(null);
 
   const getCurrentUserName = async () => {
     const userEmail = auth.currentUser.email;
@@ -25,7 +28,7 @@ const SearchScreen = ({ navigation }) => {
     throw new Error('Current user not found in Firestore.');
   };
 
-  const sendFriendRequest = async (userDoc) => {
+  const sendFriendRequest = async (userDoc, rowMap) => {
     try {
       const friendRequestsRef = collection(db, 'friendRequests');
       const existingRequestQuery = query(friendRequestsRef, where("from", "==", auth.currentUser.uid), where("to", "==", userDoc.id));
@@ -33,6 +36,9 @@ const SearchScreen = ({ navigation }) => {
 
       if (!existingRequests.empty) {
         setMessage("You've already sent a friend request. Please wait for a response.");
+        if (rowMap && rowMap[userDoc.id] && rowMap[userDoc.id].closeRow) {
+            rowMap[userDoc.id].closeRow();
+        }
         return;
       }
 
@@ -42,10 +48,16 @@ const SearchScreen = ({ navigation }) => {
         timestamp: new Date().toISOString()
       });
       
-      setMessage(`Friend request sent to ${userDoc.data().email}.`);
+      setMessage(`Friend request sent to ${userDoc.email}.`);
+      if (rowMap && rowMap[userDoc.id] && rowMap[userDoc.id].closeRow) {
+            rowMap[userDoc.id].closeRow();
+        }
     } catch (error) {
-      console.error("Error sending friend request:", error);
-      setMessage("Failed to send friend request. Please try again.");
+      // console.error("Error sending friend request:", error);
+      // setMessage("Failed to send friend request. Please try again.");
+      if (rowMap && rowMap[userDoc.id] && rowMap[userDoc.id].closeRow) {
+            rowMap[userDoc.id].closeRow();
+        }
     }
   }
 
@@ -71,28 +83,56 @@ const SearchScreen = ({ navigation }) => {
         return;
       }
 
-      // Prompt to confirm the addition of the friend
-      Alert.alert(
-        "Add Friend",
-        `Do you want to add ${userDoc.data().name} as a friend?`,
-        [
-          {
-            text: "Cancel",
-          },
-          { 
-            text: "Yes", 
-            onPress: () => sendFriendRequest(userDoc)
-          }
-        ]
-      );
+      // Set the search result
+      setSearchResult({
+        id: userDoc.id,
+        name: userDoc.data().name,
+        email: userDoc.data().email,
+        // Add other fields if needed
+      });
+
     } else {
       setMessage('User not found.');
+      setSearchResult(null); // Clear previous search results
     }
   };
 
   const resetSearch = () => {
     setEmail('');  // clear input
+    setSearchResult(null);
   }
+
+  const renderHiddenItem = (data, rowMap) => (
+    <View style={styles.rowBack}>
+      <TouchableOpacity
+          style={[styles.backRightBtn, styles.backRightBtnRight]}
+          onPress={() => {
+            Alert.alert(
+              "Add Friend",
+              `Do you want to add ${data.item.name} as a friend?`,
+              [
+                {
+                  text: "Cancel",
+                  onPress: () => {
+                    if (rowMap && rowMap[data.item.id] && rowMap[data.item.id].closeRow) {
+                        rowMap[data.item.id].closeRow();
+                    }
+                  }
+                },
+                { 
+                  text: "Yes", 
+                  onPress: () => sendFriendRequest(data.item, rowMap)
+                }
+              ]
+            );
+          }}
+      >
+          <Text style={styles.backTextWhite}>Add</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const searchResultData = searchResult ? [searchResult] : []; // Convert to array for FlatList
 
   return (
     <View style={styles.container}>
@@ -105,6 +145,7 @@ const SearchScreen = ({ navigation }) => {
           onChangeText={(text) => {
             setEmail(text);
             if (message) setMessage('');
+            setSearchResult(null);
           }}
           style={styles.searchInput} 
           autoCapitalize='none'
@@ -115,6 +156,15 @@ const SearchScreen = ({ navigation }) => {
         <PressButton text="Search" handlePress={searchFriendByEmail} width="30%" />
       </View>
       <Text style={styles.messageText}>{message}</Text>
+
+      <SwipeListView
+          data={searchResultData}
+          renderItem={({ item }) => <FriendItem item={item} />}
+          renderHiddenItem={renderHiddenItem}
+          rightOpenValue={-75}
+          keyExtractor={item => item.id}
+          disableRightSwipe
+      />
     </View>
   );
 };

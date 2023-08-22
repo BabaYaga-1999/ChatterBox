@@ -10,7 +10,8 @@ const MessageInput = ({ input, setInput, sendMessage, canSendMessage, toggleAtta
                 value={input}
                 onChangeText={setInput}
                 style={styles.input}
-                placeholder="Type a message..."
+                placeholder={canSendMessage ? "Type a message..." : "Text Input Disabled"}
+                editable={canSendMessage}
             />
             {input.trim() !== "" && canSendMessage && (
                 <MaterialCommunityIcons name="send-circle-outline" size={28} color="black" onPress={sendMessage} style={styles.insideIcon} />
