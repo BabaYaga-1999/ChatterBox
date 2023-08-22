@@ -48,12 +48,12 @@ const DiscoverScreen = () => {
   const snapPoints = useMemo(() => ['50%', '50%'], []);
   
 
-  function calculateDistance(userLoc, postLoc){
-    const latDistance = userLoc.coords.latitude-postLoc.coords.latitude;
-    const longDistance = userLoc.coords.longitude-postLoc.coords.longitude;
-    const distance = Math.sqrt(Math.pow(latDistance, 2) + Math.pow(longDistance, 2))
-    return distance;
-  }
+  // function calculateDistance(userLoc, postLoc){
+  //   const latDistance = userLoc.coords.latitude-postLoc.coords.latitude;
+  //   const longDistance = userLoc.coords.longitude-postLoc.coords.longitude;
+  //   const distance = Math.sqrt(Math.pow(latDistance, 2) + Math.pow(longDistance, 2))
+  //   return distance;
+  // }
 
   function onMarkerPress(item){
     if (isInFriendList(item.authorId) || item.authorId==auth.currentUser.uid){
@@ -64,10 +64,7 @@ const DiscoverScreen = () => {
         alert("Please turn on the location")
         return;
       }
-      if(calculateDistance(location, item.gps) > 0.00565){
-        alert("You are out of distance")
-        return;
-      }
+
       bottomSheetRef.current.expand();
       setPost(item);
     }
@@ -99,8 +96,6 @@ const DiscoverScreen = () => {
       return "orange"
     }else if (isInFriendList(item.authorId)){
       return "green"
-    }else if (location && calculateDistance(location,item.gps) > 0.00565){
-      return "#b1b0b0"
     }else{
       return "red"
     }
@@ -161,15 +156,11 @@ const DiscoverScreen = () => {
         {
           location ? <Marker coordinate={{latitude: location.coords?.latitude, longitude: location.coords?.longitude}} key={1} style={{paddingTop:10}}>
             <View >
-              <Entypo name="location-pin" size={35} color="#3462fa" />
+              <Entypo name="location-pin" size={40} color="#3462fa" />
             </View>
             
           </Marker> : <></>
         }
-        {
-          location ? <Circle center={{latitude: location.coords?.latitude, longitude: location.coords?.longitude }} radius={400} /> : <></>
-        }
-
         {
           postList.map((item)=>{
             return (
