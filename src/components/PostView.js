@@ -6,14 +6,20 @@ import { db, auth } from '../utils/Firebase';
 
 export default function PostView({post}) {
   const [user, setUser] = useState();
-
-  var image = require('../images/Unknown_person.jpg');
+  var color = "red";
+  var image = require('../images/default_avatar.png');
   try{
     if(user.data().avatar){
       image={uri:user.data().avatar}
     }
-    
+    if(user.friends.some(friend => friend.id === post.authorId)){
+      color = "green"
+    }
+    if(post.authorId==auth.currentUser.id){
+      color = "black"
+    }
   }catch{}
+
   const sendFriendRequest = async (userDoc) => {
     try {
       const friendRequestsRef = collection(db, 'friendRequests');
@@ -45,7 +51,20 @@ export default function PostView({post}) {
     })();
   }, [post])
 
+  function notShowButton(){
+    try{
+      if(user.data().friends.some(friend => friend.id == auth.currentUser.uid) || post.authorId==auth.currentUser.uid){
+        return true;
+      }
+      else{
+        return false;
+      }
+    } catch{
+      console.log(111)
+      return false;
+    }
 
+  }
   
   return (
     <View style={styles.contentContainer} >
@@ -57,8 +76,9 @@ export default function PostView({post}) {
           />
           <Text style={styles.text}>{user?.data().name}</Text>
         </View>
-
-        <PressButton text='follow' width={70} handlePress={()=>sendFriendRequest(user)}/>
+        {
+          notShowButton() ? <Text style={styles.followed}>{post.authorId==auth.currentUser.uid ? "" : "Followed"}</Text> : <PressButton text='follow' width={80} handlePress={()=>sendFriendRequest(user)}/>
+        }
       </View>
       <Text style={styles.title}>{post.title}</Text>
       <Text style={styles.description}>{post.description}</Text>
@@ -98,5 +118,9 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 17
+  },
+  followed: {
+    fontSize:18,
+    color:"#a8a8a8"
   }
 })

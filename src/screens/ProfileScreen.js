@@ -180,6 +180,8 @@ const ProfileScreen = () => {
 
   async function setInput(name){
     await setDoc(doc(db, "users", auth.currentUser.uid), {name:name}, {merge:true});
+    setVisible(false);
+    setRefresh(!refresh);
   }
   
 
@@ -217,8 +219,6 @@ const ProfileScreen = () => {
         initValueTextInput={user?.data().name}
         submitInput={ (inputText) => {
           setInput(inputText);
-          setVisible(false);
-          setRefresh(!refresh);
         }}
         closeDialog={() => setVisible(false)}>
       </DialogInput>
