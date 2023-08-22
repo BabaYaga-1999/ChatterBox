@@ -289,7 +289,8 @@ export const searchStyles = StyleSheet.create({
     fontSize: 16, 
   },
   messageText: {
-    marginTop: 10,
+    marginTop: 5,
+    marginBottom: 5,
     textAlign: 'center',
     color: '#333',
     // backgroundColor: '#e0e0e0',
@@ -301,6 +302,37 @@ export const searchStyles = StyleSheet.create({
   flexDirection: 'row',
   justifyContent: 'space-around',
   margin: 10,
+  },
+  // Add the styles related to swipeable buttons
+  rowBack: {
+    alignItems: 'center',
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    backgroundColor: '#f0f0f0',
+    width: '100%',
+    // marginVertical: 5,
+  },
+  backRightBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    width: 75,
+    bottom: 1,
+    top: 1,
+  },
+  backRightBtnLeft: {
+    backgroundColor: '#32CD32',
+    right: 75,
+  },
+  backRightBtnRight: {
+    backgroundColor: '#32CD32',
+    right: 0,
+  },
+  backTextWhite: {
+    color: '#FFF',
+    fontWeight: 'bold',
   },
 });
 

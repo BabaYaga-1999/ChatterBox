@@ -78,9 +78,6 @@ There are three primary collections:
 
 This data model allows for efficient querying and retrieval of chat sessions, individual messages, user posts, and user details. It supports the core features of a chat application while providing flexibility for future enhancements.
 
-
-
-
 Installations:
 npm install --save react-native-swipeout   
 npm install --save react-native-swipe-list-view
@@ -92,3 +89,4 @@ npm install --save react-native-maps
 npm install --save openai
 npm install --save expo-clipboard
 npx expo install expo-clipboard@~4.1.2
+npm install --save react-native-dialog-input

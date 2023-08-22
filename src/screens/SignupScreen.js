@@ -58,16 +58,21 @@ export default function SignupScreen({ navigation }) {
       });
 
       // await auth.signOut();
+      Alert.alert("Welcome to ChatterBox! Start by adding new friends and begin chatting.");
 
       console.log(userCred);
       // navigation.replace("Login"); // Take user to the Login after successful registration
-    } catch (err) {
-      if (err.code === "auth/weak-password") {
-        Alert.alert("The password is not strong enough");
-      } else {
-        console.log("signup ", err);
-        Alert.alert(err.message);
-      }
+    // } catch (err) {
+    //   if (err.code === "auth/weak-password") {
+    //     Alert.alert("The password is not strong enough");
+    //   } else {
+    //     console.log("signup ", err);
+    //     Alert.alert(err.message);
+    //   }
+    // }
+      } catch (err) {
+      console.log("signup ", err);
+      Alert.alert(err.message);
     }
   };
 
