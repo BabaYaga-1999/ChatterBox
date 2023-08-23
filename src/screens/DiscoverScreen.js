@@ -103,7 +103,7 @@ const DiscoverScreen = () => {
 
   useEffect(() => {
     (async () => {
-      console.log(1)
+  
       Location.set
       let { status } = await requestPermission();
       
@@ -117,7 +117,6 @@ const DiscoverScreen = () => {
         {accuracy:Location.Accuracy.High,
         distanceInterval:1},
         (loc) => {
-          console.log(loc);
           setLocation(loc);
         }
       );
