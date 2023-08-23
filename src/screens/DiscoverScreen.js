@@ -77,7 +77,7 @@ const DiscoverScreen = () => {
         longitude: location.coords?.longitude,           
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,})
-      console.log(1)
+
     }
   }
   function isInFriendList(authorId){

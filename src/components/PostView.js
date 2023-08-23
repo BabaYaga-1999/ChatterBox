@@ -1,13 +1,19 @@
 import { Button, Image, StyleSheet, Text, View, Alert } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import PressButton from './PressButton';
-import { collection, query, where, getDoc, doc, getDocs, addDoc } from "firebase/firestore";
-import { db, auth } from '../utils/Firebase';
+import { collection, query, where, getDoc, doc, getDocs, addDoc, deleteDoc } from "firebase/firestore";
+import { db, auth, storage } from '../utils/Firebase';
+import { ScrollView } from 'react-native-gesture-handler';
+import { TouchableOpacity, BottomSheetScrollView, useBottomSheet } from '@gorhom/bottom-sheet';
+import { getStorage, ref, deleteObject } from "firebase/storage";
+
 
 export default function PostView({post}) {
   const [user, setUser] = useState();
   var color = "red";
   var image = require('../images/default_avatar.png');
+  const {close} = useBottomSheet();
+
   try{
     if(user.data().avatar){
       image={uri:user.data().avatar}
@@ -60,14 +66,22 @@ export default function PostView({post}) {
         return false;
       }
     } catch{
-      console.log(111)
       return false;
     }
 
   }
-  
+  function deletePost(id){
+    for(let i=0; i<post.photoList.length; i++){
+      const position = post.photoList[i].search("user_posts%2F");
+      const str = "user_posts/"+post.photoList[i].slice(position+13, position+46+13)
+      deleteObject(ref(storage,str))
+    }
+    close()
+    deleteDoc(doc(db, "posts", id))
+  }
+
   return (
-    <View style={styles.contentContainer} >
+    <BottomSheetScrollView contentContainerStyle={styles.contentContainer} >
       <View style={styles.profile}>
         <View style={styles.nameContainer} >
           <Image
@@ -77,18 +91,32 @@ export default function PostView({post}) {
           <Text style={styles.text}>{user?.data().name}</Text>
         </View>
         {
-          notShowButton() ? <Text style={styles.followed}>{post.authorId==auth.currentUser.uid ? "" : "Followed"}</Text> : <PressButton text='follow' width={80} handlePress={()=>sendFriendRequest(user)}/>
+          notShowButton() ? <Text style={styles.followed}>{post.authorId==auth.currentUser.uid ? "Yourself" : "Followed"}</Text> : <PressButton text='follow' width={80} handlePress={()=>sendFriendRequest(user)}/>
         }
       </View>
+      <ScrollView style={styles.photoContainer} horizontal={true} >
+        {
+          post.photoList?.map((photo)=>{
+
+            return <Image style={styles.image} source={{uri:photo}} />  
+          })
+        }
+      </ScrollView>
       <Text style={styles.title}>{post.title}</Text>
       <Text style={styles.description}>{post.description}</Text>
-    </View>
+      {
+        post.authorId==auth.currentUser.uid ? 
+        <TouchableOpacity onPress={()=>deletePost(post.key)}>
+          <Text style={styles.delete}>DELETE</Text>
+        </TouchableOpacity> : <></>
+      }
+      
+    </BottomSheetScrollView>
   )
 }
 
 const styles = StyleSheet.create({
   contentContainer: {
-    flex: 1,
     alignItems: 'center',
   },
   nameContainer: {
@@ -122,5 +150,19 @@ const styles = StyleSheet.create({
   followed: {
     fontSize:18,
     color:"#a8a8a8"
+  },
+  image: {
+    minHeight:210,
+    minWidth:150,
+  },
+  photoContainer: {
+    flexDirection:"row",
+    flexWrap:"wrap",
+
+  },
+  delete: {
+    fontSize:20,
+    color:"red",
+    marginTop: 20
   }
 })
