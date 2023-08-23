@@ -1,4 +1,4 @@
-import {TextInput, StyleSheet, Text, View, Image } from 'react-native'
+import {TextInput, StyleSheet, Text, View, Image, ActivityIndicator } from 'react-native'
 import React, { useState } from 'react'
 import PressButton from '../components/PressButton'
 import colors from "../styles/Color"
@@ -14,7 +14,8 @@ import { ref as storageRef, uploadBytesResumable, getDownloadURL } from '@fireba
 export default function CreatePost({navigation}) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [photoList, setPhotoList] = useState([])
+  const [photoList, setPhotoList] = useState([]);
+  const [spin, setSpin] = useState(false);
 
   function reset(){
     setTitle("");
@@ -22,6 +23,7 @@ export default function CreatePost({navigation}) {
     setPhotoList([])
   }
   async function submit(){
+    setSpin(true);
     var overLimit = false;
     if (!title){
       alert("Invalid title input");
@@ -39,6 +41,7 @@ export default function CreatePost({navigation}) {
     }
     writeToDB({title, description, gps, authorId: auth.currentUser.uid, photoList:uploadList});
     reset();
+    setSpin(false);
     navigation.goBack();
   }
 
@@ -97,6 +100,7 @@ export default function CreatePost({navigation}) {
         <PressButton handlePress={reset} text="Reset" width={100}></PressButton>
         <PressButton handlePress={submit} text="Submit" width={100}></PressButton>
       </View>
+      <ActivityIndicator animating={spin} size="large" />
     </ScrollView>
   )
 }
