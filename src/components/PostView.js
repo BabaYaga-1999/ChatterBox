@@ -98,7 +98,7 @@ export default function PostView({post}) {
         {
           post.photoList?.map((photo)=>{
 
-            return <Image style={styles.image} source={{uri:photo}} />  
+            return <Image style={styles.image} source={{uri:photo}} key={post.key} />  
           })
         }
       </ScrollView>
