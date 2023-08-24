@@ -4,7 +4,7 @@ SignUpScreen and LoginScreen are modified from instructor's Github
 
 Yucheng Wang: ChatScreen, ChatsScreen, FriendsScreen, SearchScreen, Firebase and OpenAI setup
 
-Xiangyuan Ding: DiscoverScreen, ProfileScreen, components, utils, styles
+Xiangyuan Ding: DiscoverScreen, ProfileScreen, CreatePost, ProfileScreen, access management
 
 Authentication: SignupScreen, LoginScreen
 
@@ -59,6 +59,8 @@ There are three primary collections:
   - title: The title of the post.
   - gps: The geographical location where the post was created.
   - description: The content or description of the post.
+  - photoList: All photos links in this post.
+  - authorId: The id of the author
 
  iii. users:
 
@@ -67,7 +69,7 @@ There are three primary collections:
   - email: The email ID of the user.
   - friends: A list containing the IDs of the user's friends.
   - name: The name of the user.
-  - Future enhancements may include fields like avatar, preferences, etc.
+  - avatar: The avatar of the user
 
 3. Relationships:
 
